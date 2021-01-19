@@ -418,7 +418,12 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
        所转的kernel有几个参数需要创建几个Buffer，另外再加上需要创建结果存储的Buffer。
        结果存放在创建的cl_res,此处注意其中数据类型也要相应修改，即sizeof(cl_int)，例如：若为float则为sizeof(cl_float)
     */
-
+   cout << " bias.dptr_:\n";
+    for (int i = 0; i < 3; ++i )
+    {
+      cout << const_cast<DType *>(bias.dptr_)[i]<<"  ";
+    }
+    cout << endl;
     cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, const_cast<DType *>(bias.dptr_), NULL);
     cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(DType) * N, NULL, NULL);
 
@@ -500,6 +505,7 @@ template<typename DType>
 void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
   my_ClKernelLauncher<DType>(bias,data,out,s);
+  
 }
 
 
