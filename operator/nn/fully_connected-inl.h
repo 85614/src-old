@@ -238,6 +238,7 @@ inline bool my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl
     clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
     device = devices[0];
     cout << "Device:" << devname.c_str() << "\n";
+    cout << "test typedef \n";
 
     /*
     Create a command queue(调用clCreateCommandQueue函数）一个设备device对应一个command queue。
