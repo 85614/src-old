@@ -418,19 +418,20 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
        所转的kernel有几个参数需要创建几个Buffer，另外再加上需要创建结果存储的Buffer。
        结果存放在创建的cl_res,此处注意其中数据类型也要相应修改，即sizeof(cl_int)，例如：若为float则为sizeof(cl_float)
     */
-    #define MY_DEGBUG(x) {cout << #x << " is " << (x) << endl;}
-    MY_DEGBUG(data.size(0));
-    MY_DEGBUG(out.size(0));
-    MY_DEGBUG(sizeof(DType));
-    MY_DEGBUG(N);
+    #define MY_DEBUG(x) {cout << #x << " is " << (x) << endl;}
+    MY_DEBUG(data.size(0));
+    MY_DEBUG(out.size(0));
+    MY_DEBUG(sizeof(DType));
+    MY_DEBUG(N);
+    MY_DEBUG(bias.shape_[0]);
     cout << " out.dptr_:\n";
     for (int i = 0; i < data.size(0); ++i )
     {
       cout << const_cast<DType *>(out.dptr_)[i]<<"  ";
     }
     cout << endl;
-    cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * 2, const_cast<DType *>(bias.dptr_), NULL);
-    cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * 8, const_cast<DType *>(out.dptr_), NULL);
+    cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, const_cast<DType *>(bias.dptr_), NULL);
+    cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, const_cast<DType *>(out.dptr_), NULL);
 
     if (cl_bias == 0 || cl_mat == 0)
     {
