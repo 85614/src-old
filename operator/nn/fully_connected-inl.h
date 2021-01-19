@@ -40,7 +40,7 @@
 #include "../../common/utils.h"
 #include "../tensor/broadcast_reduce_op.h"
 
-#include "../../opencl-base.h"
+#include "../opencl-base.h"
 
 namespace mxnet {
 namespace op {
