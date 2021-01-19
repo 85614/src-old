@@ -555,7 +555,7 @@ void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     // int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
     
     MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
-    string src = make_AddBias<DType, LType>()
+    string src = make_AddBias<DType, LType>();
     my_ClKernelLauncher<DType>(bias,data,out,s, src);
     // add_bias_kernel<DType, LType><<<data.size(0),
     //                                 nthreads_addbias,
