@@ -517,7 +517,7 @@ std::string make_AddBias() {
     string LType_name = my_GetFullName(typeid(LType).name());
     MY_DEBUG(LType_name);
     MY_DEBUG(DType_name);
-    cout << "test #define"
+    cout << "test #define" << endl;
     // return "typedef "+LType_name+" LType;"
     //  "typedef " + DType_name + " DType;"
     return "\n#defeine LType "+LType_name + 
