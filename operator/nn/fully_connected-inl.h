@@ -239,7 +239,6 @@ inline bool my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl
     clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
     device = devices[0];
     cout << "Device:" << devname.c_str() << "\n";
-    cout << "test typedef \n";
 
     /*
     Create a command queue(调用clCreateCommandQueue函数）一个设备device对应一个command queue。
@@ -284,27 +283,6 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s,
              string src
              ) { 
-    // int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
-    // string LType_str;
-    // switch (ltype) {
-    //     case mshadow::kFloat32:
-    //         LType_str = "float";
-    //         break;
-    //     case mshadow::kFloat64:
-    //         LType_str = "double";
-    //         break;
-    //     case mshadow::kFloat16:
-    //         LType_str = "uint16_t";
-    //         break;
-    //     case mshadow::kUint8:
-    //         LType_str = "unsigned char";
-    //         break;
-    //     default:
-    //         LOG(FATAL) << "Invalid loading enum type " << ltype;
-    //         return;
-    // }
-
-
     #ifdef NK_TIMING_OPTION
         clock_t time_start = clock();
     #endif
@@ -320,67 +298,6 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     }
 
     // kernel编写和编译
-    // string DType_name = my_GetFullName(typeid(data[0]).name());
-    // std::cout<<"-----------------------------"<<DType_name<<std::endl;
-    // string DType_str=DType_name;
-    // MY_DEBUG(DType_name);
-    // MY_DEBUG(my_GetFullName(typeid(*out.dptr_).name()));
-    // MY_DEBUG(my_GetFullName(typeid(*data.dptr_).name()));
-    // if(DType_name == "mshadow::Tensor<mshadow::cpu, 1, float>"){
-    //   DType_str = "float";
-    // }
-    // else{
-    //   DType_str = "double";
-    // }
-
-    // const char *类型的kernel编写与编译
-    //  __local "+ LType_str+" scratch[nthreads_addbias * 2]; 
-    // string src = "typedef "+LType_str+" LType;"
-    //  "typedef " + DType_str + " DType;"
-    //  " __kernel void add_bias_kernel(__global DType* mat, __global DType* bias, \
-    //                       int lead_dim, int bias_length) { \
-    //                   const int nthreads_addbias = 256; \
-    //                   LType scratch[512]; \
-    //                   const size_t N = bias_length * sizeof(DType)/sizeof(LType); \
-    //                   const size_t base = get_group_id(0) * N; \
-    //                   __global LType* const mat_aligned = (__global LType*)(mat) + base; \
-    //                   __global const LType* const bias_aligned = (__global LType*)(bias); \
-    //                   LType* const scratch_bias_load = scratch + get_local_id(0); \
-    //                   DType* const scratch_bias = (DType*)(scratch_bias_load); \
-    //                   LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; \
-    //                   DType* const scratch_mat = (DType*)(scratch_mat_load); \
-    //                   for (int i = get_local_id(0); i < N; i += get_local_size(0)) { \
-    //                     *scratch_bias_load = bias_aligned[i]; \
-    //                     *scratch_mat_load = mat_aligned[i]; \
-    //                     for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { \
-    //                       scratch_mat[j] += scratch_bias[j]; \
-    //                     } \
-    //                     mat_aligned[i] = *scratch_mat_load; \
-    //                   } \
-    //                 }";
-
-    // string src = " __kernel void add_bias_kernel(__global "+ DType_str+"* mat, __global "+ DType_str+"* bias, \
-    //                       int lead_dim, int bias_length) { \
-    //                   const int nthreads_addbias = 256; \
-    //                   "+ LType_str+" scratch[512]; \
-    //                   const size_t N = bias_length * sizeof("+ DType_str+")/sizeof("+ LType_str+"); \
-    //                   const size_t base = get_group_id(0) * N; \
-    //                   __global "+ LType_str+"* const mat_aligned = (__global "+ LType_str+"*)(mat) + base; \
-    //                   __global const "+ LType_str+"* const bias_aligned = (__global "+ LType_str+"*)(bias); \
-    //                   "+ LType_str+"* const scratch_bias_load = scratch + get_local_id(0); \
-    //                   "+ DType_str+"* const scratch_bias = ("+ DType_str+"*)(scratch_bias_load); \
-    //                   "+ LType_str+"* const scratch_mat_load = scratch_bias_load + nthreads_addbias; \
-    //                   "+ DType_str+"* const scratch_mat = ("+ DType_str+"*)(scratch_mat_load); \
-    //                   for (int i = get_local_id(0); i < N; i += get_local_size(0)) { \
-    //                     *scratch_bias_load = bias_aligned[i]; \
-    //                     *scratch_mat_load = mat_aligned[i]; \
-    //                     for (int j = 0; j < sizeof("+ LType_str+")/sizeof("+ DType_str+"); ++j) { \
-    //                       scratch_mat[j] += scratch_bias[j]; \
-    //                     } \
-    //                     mat_aligned[i] = *scratch_mat_load; \
-    //                   } \
-    //                 }";
-
     const char *source = src.c_str();
                       
     cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
@@ -425,17 +342,6 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
        所转的kernel有几个参数需要创建几个Buffer，另外再加上需要创建结果存储的Buffer。
        结果存放在创建的cl_res,此处注意其中数据类型也要相应修改，即sizeof(cl_int)，例如：若为float则为sizeof(cl_float)
     */
-    MY_DEBUG(data.size(0));
-    MY_DEBUG(out.size(0));
-    MY_DEBUG(sizeof(DType));
-    MY_DEBUG(N);
-    MY_DEBUG(bias.shape_[0]);
-    cout << " out.dptr_:\n";
-    for (int i = 0; i < N; ++i )
-    {
-      cout << const_cast<DType *>(out.dptr_)[i]<<"  ";
-    }
-    cout << endl;
     cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, const_cast<DType *>(bias.dptr_), NULL);
     cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, const_cast<DType *>(out.dptr_), NULL);
 
@@ -478,7 +384,7 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
             elapsed += (unsigned long)(endtime - starttime);
         }
     #else
-        err = clEnqueueNDRangeKernel(queue, tempkernel, 1, 0, &work_size, 0, 0, 0, 0);
+        err = clEnqueueNDRangeKernel(queue, tempkernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
         clFinish(queue);
     #endif
 
@@ -518,7 +424,6 @@ std::string make_AddBias() {
     string LType_name = my_GetFullName(typeid(LType).name());
     MY_DEBUG(LType_name);
     MY_DEBUG(DType_name);
-    cout << "test #define" << endl;
     return "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
                               __global " + DType_name + "* bias, \
                               int lead_dim, int bias_length) {"
