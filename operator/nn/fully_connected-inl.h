@@ -418,8 +418,10 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
        所转的kernel有几个参数需要创建几个Buffer，另外再加上需要创建结果存储的Buffer。
        结果存放在创建的cl_res,此处注意其中数据类型也要相应修改，即sizeof(cl_int)，例如：若为float则为sizeof(cl_float)
     */
-   cout << " out.dptr_:\n";
-    for (int i = 0; i < 8; ++i )
+    #define MY_DEGBUG(x) {cout << #x << " is " << (x) << endl;}
+    MY_DEGBUG(data.size(0));
+    cout << " out.dptr_:\n";
+    for (int i = 0; i < data.size(0); ++i )
     {
       cout << const_cast<DType *>(out.dptr_)[i]<<"  ";
     }
