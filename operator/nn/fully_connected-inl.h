@@ -527,14 +527,13 @@ void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     string LType_name;
     MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
     LType_name = my_GetFullName(typeid(LType).name());
-    
-    add_bias_kernel<DType, LType><<<data.size(0),
-                                    nthreads_addbias,
-                                    0,
-                                    Stream<gpu>::GetStream(s)>>>(out.dptr_,
-                                                                 bias.dptr_,
-                                                                 data.size(0),
-                                                                 bias.shape_[0]);
+    // add_bias_kernel<DType, LType><<<data.size(0),
+    //                                 nthreads_addbias,
+    //                                 0,
+    //                                 Stream<gpu>::GetStream(s)>>>(out.dptr_,
+    //                                                              bias.dptr_,
+    //                                                              data.size(0),
+    //                                                              bias.shape_[0]);
     });
     string src = "typedef "+LType_name+" LType;"
      "typedef " + DType_name + " DType;"
