@@ -517,8 +517,11 @@ std::string make_AddBias() {
     string LType_name = my_GetFullName(typeid(LType).name());
     MY_DEBUG(LType_name);
     MY_DEBUG(DType_name);
-    return "typedef "+LType_name+" LType;"
-     "typedef " + DType_name + " DType;"
+    cout << "test #define"
+    // return "typedef "+LType_name+" LType;"
+    //  "typedef " + DType_name + " DType;"
+    return "\n#defeine LType "+LType_name + 
+     "\n#define DType" + DType_name + 
 R"(__kernel void add_bias_kernel(__global DType* mat, __global DType* bias, 
                               int lead_dim, int bias_length) { 
     const int nthreads_addbias = 256; 
