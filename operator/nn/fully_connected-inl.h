@@ -255,18 +255,18 @@ inline bool my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl
     return 0;
 }
 
-inline int my_get_load_type(size_t N) {
-  using namespace mshadow;
-  if (N % 8 == 0) {
-    return kFloat64;
-  } else if (N % 4 == 0) {
-    return kFloat32;
-  } else if (N % 2 == 0) {
-    return kFloat16;
-  } else {
-    return kUint8;
-  }
-}
+// inline int my_get_load_type(size_t N) {
+//   using namespace mshadow;
+//   if (N % 8 == 0) {
+//     return kFloat64;
+//   } else if (N % 4 == 0) {
+//     return kFloat32;
+//   } else if (N % 2 == 0) {
+//     return kFloat16;
+//   } else {
+//     return kUint8;
+//   }
+// }
 inline const string my_GetFullName(const char* name)
 {
     int status = -1;
@@ -319,8 +319,8 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     }
 
     // kernel编写和编译
-    string DType_name = my_GetFullName(typeid(data[0]).name());
-    std::cout<<"-----------------------------"<<DType_name<<std::endl;
+    // string DType_name = my_GetFullName(typeid(data[0]).name());
+    // std::cout<<"-----------------------------"<<DType_name<<std::endl;
     // string DType_str=DType_name;
     // MY_DEBUG(DType_name);
     // MY_DEBUG(my_GetFullName(typeid(*out.dptr_).name()));
@@ -520,8 +520,8 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
   
 // }
 template<typename DType>
-void AddBias(Tensor<gpu, 1, DType> bias, Tensor<gpu, 2, DType> data,
-             Tensor<gpu, 2, DType> out, Stream<gpu>* s) {
+void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+             Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
     int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
     string DType_name = DType_name = my_GetFullName(typeid(DType).name());
     string LType_name;
