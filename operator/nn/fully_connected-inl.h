@@ -384,6 +384,7 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
             elapsed += (unsigned long)(endtime - starttime);
         }
     #else
+        cout << "test nullptr\n";
         err = clEnqueueNDRangeKernel(queue, tempkernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
         clFinish(queue);
     #endif
