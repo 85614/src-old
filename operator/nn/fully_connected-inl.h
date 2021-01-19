@@ -24,6 +24,7 @@
 */
 #ifndef MXNET_OPERATOR_NN_FULLY_CONNECTED_INL_H_
 #define MXNET_OPERATOR_NN_FULLY_CONNECTED_INL_H_
+#define MY_DEBUG(x) {cout << #x << " is " << (x) << endl;}
 
 #include <dmlc/logging.h>
 #include <dmlc/parameter.h>
@@ -319,6 +320,7 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     string DType_name = my_GetFullName(typeid(data[0]).name());
     std::cout<<"-----------------------------"<<DType_name<<std::endl;
     string DType_str=DType_name;
+    MY_DEBUG(DType_name);
     if(DType_name == "mshadow::Tensor<mshadow::cpu, 1, float>"){
       DType_str = "float";
     }
@@ -418,7 +420,6 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
        所转的kernel有几个参数需要创建几个Buffer，另外再加上需要创建结果存储的Buffer。
        结果存放在创建的cl_res,此处注意其中数据类型也要相应修改，即sizeof(cl_int)，例如：若为float则为sizeof(cl_float)
     */
-    #define MY_DEBUG(x) {cout << #x << " is " << (x) << endl;}
     MY_DEBUG(data.size(0));
     MY_DEBUG(out.size(0));
     MY_DEBUG(sizeof(DType));
@@ -508,12 +509,24 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
 }
 
 template<typename DType>
-void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+void AddBias0(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
   my_ClKernelLauncher<DType>(bias,data,out,s);
   
 }
-
+template<typename DType>
+void AddBias(Tensor<gpu, 1, DType> bias, Tensor<gpu, 2, DType> data,
+             Tensor<gpu, 2, DType> out, Stream<gpu>* s) {
+    int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
+    MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
+    add_bias_kernel<DType, LType><<<data.size(0),
+                                    nthreads_addbias,
+                                    0,
+                                    Stream<gpu>::GetStream(s)>>>(out.dptr_,
+                                                                 bias.dptr_,
+                                                                 data.size(0),
+                                                                 bias.shape_[0]);
+    });
 
 #endif  //MY_OPENCLTEST
 
