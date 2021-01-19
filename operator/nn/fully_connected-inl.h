@@ -536,6 +536,8 @@ void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     //                                                              data.size(0),
     //                                                              bias.shape_[0]);
     });
+    MY_DEBUG(LType_name);
+    MY_DEBUG(DType_name);
     string src = "typedef "+LType_name+" LType;"
      "typedef " + DType_name + " DType;"
      " __kernel void add_bias_kernel(__global DType* mat, __global DType* bias, \
