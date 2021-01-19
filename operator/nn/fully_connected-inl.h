@@ -425,7 +425,7 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     MY_DEBUG(N);
     MY_DEBUG(bias.shape_[0]);
     cout << " out.dptr_:\n";
-    for (int i = 0; i < data.size(0); ++i )
+    for (int i = 0; i < N; ++i )
     {
       cout << const_cast<DType *>(out.dptr_)[i]<<"  ";
     }
