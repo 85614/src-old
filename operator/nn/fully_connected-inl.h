@@ -425,7 +425,7 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     }
     cout << endl;
     cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, const_cast<DType *>(bias.dptr_), NULL);
-    cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(out) * N, const_cast<DType *>(bias.dptr_), NULL);
+    cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(out) * N, const_cast<DType *>(out.dptr_), NULL);
 
     if (cl_bias == 0 || cl_mat == 0)
     {
