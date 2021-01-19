@@ -24,7 +24,6 @@
 */
 #ifndef MXNET_OPERATOR_NN_FULLY_CONNECTED_INL_H_
 #define MXNET_OPERATOR_NN_FULLY_CONNECTED_INL_H_
-#define MY_DEBUG(x) {cout << #x << " is " << (x) << endl;}
 
 #include <dmlc/logging.h>
 #include <dmlc/parameter.h>
@@ -41,7 +40,7 @@
 #include "../../common/utils.h"
 #include "../tensor/broadcast_reduce_op.h"
 
-#include "../opencl-base.h"
+#include "../../opencl-base.h"
 
 namespace mxnet {
 namespace op {
