@@ -266,7 +266,7 @@ inline int my_get_load_type(size_t N) {
     return kUint8;
   }
 }
-// 返回值为右值，为const没有用，而且还让编译器不能做返回值优化
+// 返回值为右值，为const没有用，而且还让编译器不能进行返回值优化
 inline string my_GetFullName(const char* name)
 {
     int status = -1;
@@ -428,7 +428,7 @@ std::string make_AddBias() {
     return "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
                               __global " + DType_name + "* bias, \
                               int lead_dim, int bias_length) {"
-    "typedef "+LType_name+" LType;" // 放在函数内部主要是为了防止重定义
+    "typedef "+LType_name+" LType;" // 放在函数内部主要是为了防止命名冲突
     "typedef " + DType_name + " DType;"
     "const int nthreads_addbias = 256; \
     LType scratch[512]; \
@@ -460,8 +460,8 @@ std::string make_AddBias() {
 template<typename DType>
 void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
-    int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
     // int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
+    int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
     
     MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
     string src = make_AddBias<DType, LType>();
