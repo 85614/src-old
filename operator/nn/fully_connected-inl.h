@@ -509,24 +509,24 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
 }
 
 template<typename DType>
-void AddBias0(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
   my_ClKernelLauncher<DType>(bias,data,out,s);
   
 }
-template<typename DType>
-void AddBias(Tensor<gpu, 1, DType> bias, Tensor<gpu, 2, DType> data,
-             Tensor<gpu, 2, DType> out, Stream<gpu>* s) {
-    int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
-    MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
-    add_bias_kernel<DType, LType><<<data.size(0),
-                                    nthreads_addbias,
-                                    0,
-                                    Stream<gpu>::GetStream(s)>>>(out.dptr_,
-                                                                 bias.dptr_,
-                                                                 data.size(0),
-                                                                 bias.shape_[0]);
-    });
+// template<typename DType>
+// void AddBias(Tensor<gpu, 1, DType> bias, Tensor<gpu, 2, DType> data,
+//              Tensor<gpu, 2, DType> out, Stream<gpu>* s) {
+//     int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
+//     MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
+//     add_bias_kernel<DType, LType><<<data.size(0),
+//                                     nthreads_addbias,
+//                                     0,
+//                                     Stream<gpu>::GetStream(s)>>>(out.dptr_,
+//                                                                  bias.dptr_,
+//                                                                  data.size(0),
+//                                                                  bias.shape_[0]);
+//     });
 
 #endif  //MY_OPENCLTEST
 
