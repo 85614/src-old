@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.cuh": "cpp",
+    "xiosbase": "cpp",
+    "xstring": "cpp"
+  }
+}
