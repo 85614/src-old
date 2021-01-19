@@ -421,6 +421,8 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     #define MY_DEGBUG(x) {cout << #x << " is " << (x) << endl;}
     MY_DEGBUG(data.size(0));
     MY_DEGBUG(out.size(0));
+    MY_DEGBUG(sizeof(DType));
+    MY_DEGBUG(N);
     cout << " out.dptr_:\n";
     for (int i = 0; i < data.size(0); ++i )
     {
