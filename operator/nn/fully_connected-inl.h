@@ -511,7 +511,36 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
 
     return;
 }
-
+template<typename DType, typename LType>
+std::string make_AddBias() {
+    string DType_name = my_GetFullName(typeid(DType).name());
+    string LType_name = my_GetFullName(typeid(LType).name());
+    MY_DEBUG(LType_name);
+    MY_DEBUG(DType_name);
+    return "typedef "+LType_name+" LType;"
+     "typedef " + DType_name + " DType;"
+R"(__kernel void add_bias_kernel(__global DType* mat, __global DType* bias, 
+                              int lead_dim, int bias_length) { 
+    const int nthreads_addbias = 256; 
+    LType scratch[512]; 
+    const size_t N = bias_length * sizeof(DType)/sizeof(LType); 
+    const size_t base = get_group_id(0) * N; 
+    __global LType* const mat_aligned = (__global LType*)(mat) + base; 
+    __global const LType* const bias_aligned = (__global LType*)(bias); 
+    LType* const scratch_bias_load = scratch + get_local_id(0); 
+    DType* const scratch_bias = (DType*)(scratch_bias_load); 
+    LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; 
+    DType* const scratch_mat = (DType*)(scratch_mat_load); 
+    for (int i = get_local_id(0); i < N; i += get_local_size(0)) { 
+        *scratch_bias_load = bias_aligned[i]; 
+        *scratch_mat_load = mat_aligned[i]; 
+        for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { 
+            scratch_mat[j] += scratch_bias[j]; 
+        } 
+        mat_aligned[i] = *scratch_mat_load; 
+        } 
+};)"
+}
 
 // template<typename DType>
 // void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
@@ -524,10 +553,10 @@ void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
     int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
     // int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
-    string DType_name = my_GetFullName(typeid(DType).name());
-    string LType_name;
+    
     MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
-    LType_name = my_GetFullName(typeid(LType).name());
+    string src = make_AddBias<DType, LType>()
+    my_ClKernelLauncher<DType>(bias,data,out,s, src);
     // add_bias_kernel<DType, LType><<<data.size(0),
     //                                 nthreads_addbias,
     //                                 0,
@@ -536,32 +565,8 @@ void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     //                                                              data.size(0),
     //                                                              bias.shape_[0]);
     });
-    MY_DEBUG(LType_name);
-    MY_DEBUG(DType_name);
-    string src = "typedef "+LType_name+" LType;"
-     "typedef " + DType_name + " DType;"
-     " __kernel void add_bias_kernel(__global DType* mat, __global DType* bias, \
-                          int lead_dim, int bias_length) { \
-                      const int nthreads_addbias = 256; \
-                      LType scratch[512]; \
-                      const size_t N = bias_length * sizeof(DType)/sizeof(LType); \
-                      const size_t base = get_group_id(0) * N; \
-                      __global LType* const mat_aligned = (__global LType*)(mat) + base; \
-                      __global const LType* const bias_aligned = (__global LType*)(bias); \
-                      LType* const scratch_bias_load = scratch + get_local_id(0); \
-                      DType* const scratch_bias = (DType*)(scratch_bias_load); \
-                      LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; \
-                      DType* const scratch_mat = (DType*)(scratch_mat_load); \
-                      for (int i = get_local_id(0); i < N; i += get_local_size(0)) { \
-                        *scratch_bias_load = bias_aligned[i]; \
-                        *scratch_mat_load = mat_aligned[i]; \
-                        for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { \
-                          scratch_mat[j] += scratch_bias[j]; \
-                        } \
-                        mat_aligned[i] = *scratch_mat_load; \
-                      } \
-                    }";
-    my_ClKernelLauncher<DType>(bias,data,out,s, src);
+    
+    
 
 }
 #endif  //MY_OPENCLTEST
