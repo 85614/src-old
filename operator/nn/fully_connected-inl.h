@@ -267,7 +267,8 @@ inline int my_get_load_type(size_t N) {
     return kUint8;
   }
 }
-inline const string my_GetFullName(const char* name)
+// 返回值为右值，为const没有用，而且还让编译器不能做返回值优化
+inline string my_GetFullName(const char* name)
 {
     int status = -1;
     char* fullName = abi::__cxa_demangle(name, NULL, NULL, &status);
@@ -518,31 +519,30 @@ std::string make_AddBias() {
     MY_DEBUG(LType_name);
     MY_DEBUG(DType_name);
     cout << "test #define" << endl;
-    // return "typedef "+LType_name+" LType;"
-    //  "typedef " + DType_name + " DType;"
-    return "\n#defeine LType "+LType_name + 
-     "\n#define DType" + DType_name + 
-R"(__kernel void add_bias_kernel(__global DType* mat, __global DType* bias, 
-                              int lead_dim, int bias_length) { 
-    const int nthreads_addbias = 256; 
-    LType scratch[512]; 
-    const size_t N = bias_length * sizeof(DType)/sizeof(LType); 
-    const size_t base = get_group_id(0) * N; 
-    __global LType* const mat_aligned = (__global LType*)(mat) + base; 
-    __global const LType* const bias_aligned = (__global LType*)(bias); 
-    LType* const scratch_bias_load = scratch + get_local_id(0); 
-    DType* const scratch_bias = (DType*)(scratch_bias_load); 
-    LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; 
-    DType* const scratch_mat = (DType*)(scratch_mat_load); 
-    for (int i = get_local_id(0); i < N; i += get_local_size(0)) { 
-        *scratch_bias_load = bias_aligned[i]; 
-        *scratch_mat_load = mat_aligned[i]; 
-        for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { 
-            scratch_mat[j] += scratch_bias[j]; 
-        } 
-        mat_aligned[i] = *scratch_mat_load; 
-        } 
-};)";
+    return "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
+                              __global " + DType_name + "* bias, \
+                              int lead_dim, int bias_length) {"
+    "typedef "+LType_name+" LType;" // 放在函数内部主要是为了防止重定义
+    "typedef " + DType_name + " DType;"
+    "const int nthreads_addbias = 256; \
+    LType scratch[512]; \
+    const size_t N = bias_length * sizeof(DType)/sizeof(LType); \
+    const size_t base = get_group_id(0) * N; \
+    __global LType* const mat_aligned = (__global LType*)(mat) + base; \
+    __global const LType* const bias_aligned = (__global LType*)(bias); \
+    LType* const scratch_bias_load = scratch + get_local_id(0); \
+    DType* const scratch_bias = (DType*)(scratch_bias_load); \
+    LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; \
+    DType* const scratch_mat = (DType*)(scratch_mat_load); \
+    for (int i = get_local_id(0); i < N; i += get_local_size(0)) { \
+        *scratch_bias_load = bias_aligned[i]; \
+        *scratch_mat_load = mat_aligned[i]; \
+        for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { \
+            scratch_mat[j] += scratch_bias[j]; \
+        } \
+        mat_aligned[i] = *scratch_mat_load; \
+    } \
+};";
 }
 
 // template<typename DType>
