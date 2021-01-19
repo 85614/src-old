@@ -321,8 +321,8 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     std::cout<<"-----------------------------"<<DType_name<<std::endl;
     string DType_str=DType_name;
     MY_DEBUG(DType_name);
-    MY_DEBUG(my_getFullName(typeid(*out.dptr_).name()));
-    MY_DEBUG(my_getFullName(typeid(*data.dptr_).name()));
+    MY_DEBUG(my_GetFullName(typeid(*out.dptr_).name()));
+    MY_DEBUG(my_GetFullName(typeid(*data.dptr_).name()));
     if(DType_name == "mshadow::Tensor<mshadow::cpu, 1, float>"){
       DType_str = "float";
     }
