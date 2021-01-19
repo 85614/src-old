@@ -524,7 +524,7 @@ void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
     int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
     // int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
-    string DType_name = DType_name = my_GetFullName(typeid(DType).name());
+    string DType_name = my_GetFullName(typeid(DType).name());
     string LType_name;
     MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
     LType_name = my_GetFullName(typeid(LType).name());
