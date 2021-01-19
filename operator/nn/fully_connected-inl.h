@@ -539,7 +539,7 @@ R"(__kernel void add_bias_kernel(__global DType* mat, __global DType* bias,
         } 
         mat_aligned[i] = *scratch_mat_load; 
         } 
-};)"
+};)";
 }
 
 // template<typename DType>
