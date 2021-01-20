@@ -164,16 +164,25 @@ public:
 
     KernelManager(cl_program &program, const char *kernal_name)
     {
-        kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
-        if (kernel == 0)
+        cl_kernel tempkernel = clCreateKernel(program, "add_bias_kernel", 0); //引号中名称换为改写后的kernel名称
+        kernel = tempkernel;
+        if (tempkernel == 0)
         {
             cout << "Can't load kernel\n";
-            // clReleaseContext(context);
-            // clReleaseProgram(program);
-            // clReleaseCommandQueue(queue);
             return;
         }
         is_good = true;
+        return;
+        // kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
+        // if (kernel == 0)
+        // {
+        //     cout << "Can't load kernel\n";
+        //     // clReleaseContext(context);
+        //     // clReleaseProgram(program);
+        //     // clReleaseCommandQueue(queue);
+        //     return;
+        // }
+        // is_good = true;
     }
 
     ~KernelManager()
