@@ -325,7 +325,7 @@ namespace mxnet
 
     template <typename DType>
     void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
-                  Tensor<cpu, 2, DType> out, Stream<cpu> *s)
+                 Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
       auto clsys = ClSystem::construct();
       if (!clsys)
@@ -334,8 +334,8 @@ namespace mxnet
       MemManager memM;
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
-      memM.addMem(clCreateBuffer(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, NULL));
-      memM.addMem(clCreateBuffer(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_, NULL));
+      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, NULL);
+      memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_, NULL);
       if (!memM.is_good)
         return;
       // 得到kernel
@@ -369,7 +369,7 @@ namespace mxnet
     }
     template <typename DType>
     void AddBias1(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
-                 Tensor<cpu, 2, DType> out, Stream<cpu> *s)
+                  Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
 
       cout << "test opencl-base.h\n";
