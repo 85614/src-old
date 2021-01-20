@@ -186,28 +186,6 @@ void AddBias(Tensor<gpu, 1, DType> bias, Tensor<gpu, 2, DType> data,
 把改写的OpenCL kernel 封装为Op的具体实现，其中主要内容即为OpenCL编程过程，即编写一个OpenCl代码时的所进行的步骤，和CUDA是无关的，
 */
 
-inline int my_get_load_type(size_t N) {
-  using namespace mshadow;
-  if (N % 8 == 0) {
-    return kFloat64;
-  } else if (N % 4 == 0) {
-    return kFloat32;
-  } else if (N % 2 == 0) {
-    return kFloat16;
-  } else {
-    return kUint8;
-  }
-}
-// 返回值为右值，为const没有用，而且还让编译器不能进行返回值优化
-inline string my_GetFullName(const char* name)
-{
-    int status = -1;
-    char* fullName = abi::__cxa_demangle(name, NULL, NULL, &status);
-    const char* const demangledName = (status==0) ? fullName : name;
-    string ret_val(demangledName);
-    free(fullName);
-    return ret_val;
-}
 
 template<typename DType, typename LType>
 std::string make_AddBias() {
@@ -251,7 +229,7 @@ template<typename DType>
 void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
              Tensor<cpu, 2, DType> out, Stream<cpu>* s) {
     
-    cout << "test opencl-base.h";
+    cout << "test opencl-base.h\n";
     // int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
     int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
     

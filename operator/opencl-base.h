@@ -12,9 +12,10 @@
 #include "opencl-tool.h"
 using namespace std;
 
-
 // 获取设备信息，初始化context和queue
-inline bool my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl_command_queue &queue) {
+inline bool
+my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl_command_queue &queue)
+{
     //首先获得系统上所有的OpenCL platform，调用两次clGetPlatformIDs函数，第一次获取可用的平台数量，第二次获取一个可用的平台ID,不用动即可。
     cl_int err;
     cl_uint num;
@@ -38,13 +39,13 @@ inline bool my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl
     cl_context_properties prop[] = {CL_CONTEXT_PLATFORM,
                                     reinterpret_cast<cl_context_properties>(platforms[0]), 0};
     context = clCreateContextFromType(prop, CL_DEVICE_TYPE_DEFAULT, NULL,
-                                                 NULL, NULL);
+                                      NULL, NULL);
     if (context == 0)
     {
         cout << "Can't create OpenCL context\n";
         return 1;
     }
-    
+
     size_t cb;
     clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &cb);
     vector<cl_device_id> devices(cb / sizeof(cl_device_id));
@@ -70,14 +71,45 @@ inline bool my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl
     return 0;
 }
 
+class ClSystem
+{
+public:
+    cl_device_id device;
+    cl_context context;
+    cl_command_queue queue;
+    bool is_good = false;
+
+    ClSystem()
+    {
+        // cl_int err;
+        // cl_uint num;
+        if (my_ClDeviceInitializer(context, device, queue))
+        {
+            return;
+        }
+        is_good = true;
+    }
+
+    ~ClSystem()
+    {
+        if (is_good)
+        {
+            clReleaseContext(context);
+            clReleaseProgram(program);
+            clReleaseCommandQueue(queue);
+        }
+    }
+
+}
+
 template <typename DType>
 void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
-             Tensor<cpu, 2, DType> out, Stream<cpu>* s,
-             string src
-             ) { 
-    #ifdef NK_TIMING_OPTION
-        clock_t time_start = clock();
-    #endif
+                         Tensor<cpu, 2, DType> out, Stream<cpu> *s,
+                         string src)
+{
+#ifdef NK_TIMING_OPTION
+    clock_t time_start = clock();
+#endif
 
     cl_int err;
     cl_uint num;
@@ -91,20 +123,21 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
 
     // kernel编写和编译
     const char *source = src.c_str();
-                      
+
     cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
     err = clBuildProgram(program, 0, 0, 0, 0, 0);
     if (err != CL_SUCCESS)
     {
         cout << "Can't load or build program\n";
-        if (err == CL_BUILD_PROGRAM_FAILURE) {
-		    size_t log_size;
-		    clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-		    char *log = (char *) malloc(log_size);
-		    clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-		    fprintf(stderr, "%s\n", log);
-		    free(log);
-	   }
+        if (err == CL_BUILD_PROGRAM_FAILURE)
+        {
+            size_t log_size;
+            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+            char *log = (char *)malloc(log_size);
+            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+            fprintf(stderr, "%s\n", log);
+            free(log);
+        }
         clReleaseContext(context);
         clReleaseProgram(program);
         clReleaseCommandQueue(queue);
@@ -112,7 +145,7 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     }
 
     //一个 OpenCL kernel 中可能有很多函数，这里获得函数的进入点。
-    cl_kernel tempkernel = clCreateKernel(program, "add_bias_kernel", 0);//引号中名称换为改写后的kernel名称
+    cl_kernel tempkernel = clCreateKernel(program, "add_bias_kernel", 0); //引号中名称换为改写后的kernel名称
     if (tempkernel == 0)
     {
         cout << "Can't load kernel\n";
@@ -121,11 +154,11 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
         clReleaseCommandQueue(queue);
         return;
     }
-    size_t N = out.shape_[0]*out.shape_[1];
+    size_t N = out.shape_[0] * out.shape_[1];
     size_t bias_N = bias.shape_[0];
-    int lead_dim=data.size(0);
-    int bias_length=bias.shape_[0];
-    std::cout<<"----------------------:"<<sizeof(DType)<<"  "<<sizeof(float)<<std::endl;
+    int lead_dim = data.size(0);
+    int bias_length = bias.shape_[0];
+    std::cout << "----------------------:" << sizeof(DType) << "  " << sizeof(float) << std::endl;
 
     /*
     Create device buffers(调用clCreateBuffer函数）
@@ -157,50 +190,53 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
 
     // kernel执行与时间统计
     const int nthreads_addbias = 256;
-    size_t work_size = lead_dim*nthreads_addbias;
-    #ifdef NK_TIMING_OPTION
-        int loop = 1000;
-        cl_event *timing_event = new cl_event[loop];
-        cl_int err_code, kerneltimer;
-        for(int j = 0; j < loop; j++) {
-            err = clEnqueueNDRangeKernel(queue, tempkernel, 1, 0, &work_size, 0, 0, 0, &timing_event[j]);
-            clFinish(queue);
-        }
-        clock_t time_end = clock();
-
-        cl_ulong starttime, endtime;
-        unsigned long elapsed = 0;
-        for(int j = 0; j < loop; j++) {
-            err_code = clGetEventProfilingInfo(timing_event[j], CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &starttime, NULL);
-            kerneltimer = clGetEventProfilingInfo(timing_event[j], CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endtime, NULL);
-            elapsed += (unsigned long)(endtime - starttime);
-        }
-    #else
-        cout << "test nullptr\n";
-        err = clEnqueueNDRangeKernel(queue, tempkernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+    size_t work_size = lead_dim * nthreads_addbias;
+#ifdef NK_TIMING_OPTION
+    int loop = 1000;
+    cl_event *timing_event = new cl_event[loop];
+    cl_int err_code, kerneltimer;
+    for (int j = 0; j < loop; j++)
+    {
+        err = clEnqueueNDRangeKernel(queue, tempkernel, 1, 0, &work_size, 0, 0, 0, &timing_event[j]);
         clFinish(queue);
-    #endif
+    }
+    clock_t time_end = clock();
+
+    cl_ulong starttime, endtime;
+    unsigned long elapsed = 0;
+    for (int j = 0; j < loop; j++)
+    {
+        err_code = clGetEventProfilingInfo(timing_event[j], CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &starttime, NULL);
+        kerneltimer = clGetEventProfilingInfo(timing_event[j], CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endtime, NULL);
+        elapsed += (unsigned long)(endtime - starttime);
+    }
+#else
+    cout << "test nullptr\n";
+    err = clEnqueueNDRangeKernel(queue, tempkernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+    clFinish(queue);
+#endif
 
     //执行结果在OpenCL设备内存中，所以要取回结果到cpu中
     if (err == CL_SUCCESS)
     {
         // 从GPU取回结果
         err = clEnqueueReadBuffer(queue, cl_mat, CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
-        cout<<out.dptr_[0]<<"  "<<out.dptr_[1]<<endl;
+        cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
         {
             cout << "Can't run kernel or read back data\n";
         }
     }
 
-    #ifdef NK_TIMING_OPTION
-        for(int j = 0; j < loop; j++) {
-            clReleaseEvent(timing_event[j]);
-        }
-        delete[] timing_event;
-        cout << "opencl time use:" << 1000 * (time_end - time_start) / (double)CLOCKS_PER_SEC << "us" << endl;
-        cout << "opencl kernel time use:" << elapsed / 1000.0 / 1000 << "us" << endl;
-    #endif
+#ifdef NK_TIMING_OPTION
+    for (int j = 0; j < loop; j++)
+    {
+        clReleaseEvent(timing_event[j]);
+    }
+    delete[] timing_event;
+    cout << "opencl time use:" << 1000 * (time_end - time_start) / (double)CLOCKS_PER_SEC << "us" << endl;
+    cout << "opencl kernel time use:" << elapsed / 1000.0 / 1000 << "us" << endl;
+#endif
 
     clReleaseMemObject(cl_bias);
     clReleaseMemObject(cl_mat);

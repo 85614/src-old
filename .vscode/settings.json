@@ -2,6 +2,7 @@
   "files.associations": {
     "*.cuh": "cpp",
     "xiosbase": "cpp",
-    "xstring": "cpp"
+    "xstring": "cpp",
+    "vector": "cpp"
   }
 }
