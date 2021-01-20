@@ -79,14 +79,14 @@ public:
     cl_context context;
     cl_command_queue queue;
     bool is_good = false;
-    static ClSystem &singleton()
+    static ClSystem *singleton()
     {
         static ClSystem instance;
-        return instance;
+        return &instance;
     }
     static ClSystem *construct()
     {
-        ClSystem &instance = singleton();
+        ClSystem &instance = *singleton();
         if (instance.is_good)
             return &instance;
         return nullptr;
