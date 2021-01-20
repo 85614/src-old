@@ -306,7 +306,7 @@ namespace mxnet
     }
 
     template <typename DType, typename LType>
-    ProgramManager *add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+    void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                                     Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
 
