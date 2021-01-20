@@ -340,10 +340,10 @@ namespace mxnet
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         KernelM = make_add_bias_kernel<DType, LType>();
       });
-      if (!kernelM || !kernelM.is_good)
+      if (!kernelM || !kernelM->is_good)
         return;
       // 设置参数
-      setArgs(kernelM->kernel, memM->mems[0], memM->mems[1], data.size(0), bias.shape_[0]);
+      setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
       // 运行
       auto clsys = ClSystem::construct();
       if (!clsys)
@@ -352,12 +352,12 @@ namespace mxnet
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
       cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
-      clFinish(queue);
+      clFinish(clsys->queue);
       //执行结果在OpenCL设备内存中，所以要取回结果到cpu中
       if (err == CL_SUCCESS)
       {
         // 从GPU取回结果
-        err = clEnqueueReadBuffer(clsys->queue, memM->mems[1], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
+        err = clEnqueueReadBuffer(clsys->queue, memM.mems[1], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
         {
