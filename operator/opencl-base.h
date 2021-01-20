@@ -95,11 +95,39 @@ public:
         if (is_good)
         {
             clReleaseContext(context);
-            clReleaseProgram(program);
             clReleaseCommandQueue(queue);
         }
     }
 
+}
+
+class ProgramManager
+{
+public:
+    cl_program program;
+    ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
+    {
+        cl_int err;
+        cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
+        err = clBuildProgram(program, 0, 0, 0, 0, 0);
+        if (err != CL_SUCCESS)
+        {
+            cout << "Can't load or build program\n";
+            if (err == CL_BUILD_PROGRAM_FAILURE)
+            {
+                size_t log_size;
+                clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+                char *log = (char *)malloc(log_size);
+                clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+                fprintf(stderr, "%s\n", log);
+                free(log);
+            }
+            // clReleaseContext(context);
+            clReleaseProgram(program);
+            // clReleaseCommandQueue(queue);
+            return;
+        }
+    }
 }
 
 template <typename DType>
