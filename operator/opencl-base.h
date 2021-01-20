@@ -141,7 +141,7 @@ class KernelManager
 public:
     cl_kernel tempkernel;
     bool is_good = false;
-    KernelManager(const ProgramManager &pm, const char *kernal_name)
+    KernelManager(ProgramManager &pm, const char *kernal_name)
         : KernelManager(pm.program, kernal_name)
     {
     }
@@ -165,6 +165,23 @@ public:
     {
         if (is_good)
             clReleaseKernel(tempkernel);
+    }
+};
+class MemManager
+{
+public:
+    vector<cl_mem> mems;
+    bool is_good;
+    void addMem(cl_context context, // The context where the memory will be allocated
+
+                cl_mem_flags flags,
+
+                size_t size, // The size in bytes
+
+                void *host_ptr,
+
+                cl_int *errcode_ret) ~MemManager()
+    {
     }
 };
 
@@ -233,8 +250,8 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
        所转的kernel有几个参数需要创建几个Buffer，另外再加上需要创建结果存储的Buffer。
        结果存放在创建的cl_res,此处注意其中数据类型也要相应修改，即sizeof(cl_int)，例如：若为float则为sizeof(cl_float)
     */
-    cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, const_cast<DType *>(bias.dptr_), NULL);
-    cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, const_cast<DType *>(out.dptr_), NULL);
+    cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, NULL);
+    cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_, NULL);
 
     if (cl_bias == 0 || cl_mat == 0)
     {
