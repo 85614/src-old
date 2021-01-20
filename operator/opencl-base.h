@@ -80,16 +80,15 @@ public:
     cl_context context;
     cl_command_queue queue;
     bool is_good = false; // 状态
-    static ClSystem &singleton()
+    static ClSystem *singleton()
     {
         // 单例
         static ClSystem instance;
-        MY_DEBUG(instance.queue)
-        return instance;
+        return &instance;
     }
     static ClSystem *construct()
     {
-        ClSystem &instance = singleton();
+        ClSystem &instance = *singleton();
         if (instance.is_good)
             return &instance;
         return nullptr;

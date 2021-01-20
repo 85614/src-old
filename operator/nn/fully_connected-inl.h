@@ -276,9 +276,9 @@ namespace mxnet
       static ProgramManager *ans = nullptr;
       string src = make_add_bias_kernel_src<DType, LType>();
       auto clsys = ClSystem::singleton();
-      if (!clsys.is_good)
+      if (!clsys)
         return nullptr;
-      static ProgramManager programM(clsys.context, clsys.device, src);
+      static ProgramManager programM(clsys->context, clsys->device, src);
       if (programM.is_good)
         ans = &programM;
       return ans;
@@ -305,7 +305,7 @@ namespace mxnet
     {
 
       auto clsys = ClSystem::singleton();
-      if (!clsys.is_good)
+      if (!clsys)
         return;
       // 得到kernel
       KernelManager *kernelM = nullptr;
@@ -322,8 +322,8 @@ namespace mxnet
       MemManager memM;
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
-      memM.addMem(clsys.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
-      memM.addMem(clsys.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
+      memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
+      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
       if (!memM.is_good)
         return;
       // 设置参数
@@ -336,20 +336,20 @@ namespace mxnet
       size_t work_size = lead_dim * nthreads_addbias;
 
       MY_DEBUG(__LINE__);
-      MY_DEBUG(clsys.queue);
+      MY_DEBUG(clsys->queue);
       MY_DEBUG(__LINE__);
       MY_DEBUG(kernelM->kernel);
       MY_DEBUG(__LINE__);
-      cl_int err = clEnqueueNDRangeKernel(clsys.queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+      cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
       MY_DEBUG(__LINE__);
-      clFinish(clsys.queue);
+      clFinish(clsys->queue);
 
       //取回结果
       if (err == CL_SUCCESS)
       {
         // 从GPU取回结果
         MY_DEBUG(__LINE__);
-        err = clEnqueueReadBuffer(clsys.queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
+        err = clEnqueueReadBuffer(clsys->queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
         MY_DEBUG(__LINE__);
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
