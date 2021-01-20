@@ -324,7 +324,7 @@ namespace mxnet
     }
 
     template <typename DType>
-    void AddBias2(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+    void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                   Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
       auto clsys = ClSystem::construct();
@@ -368,7 +368,7 @@ namespace mxnet
       }
     }
     template <typename DType>
-    void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+    void AddBias1(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                  Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
 
