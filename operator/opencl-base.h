@@ -133,22 +133,28 @@ public:
     static ProgramManager *make_kernel_program(const string &program_src)
     {
         {
-
+            // 尝试获得过去的记录
             auto it = record.find(&program_src);
             if (it != record.end())
             {
                 ProgramManager *programM = (*it).second;
-                if (programM.is_good)
-                    return &programM;
-                return nullptr;
+                return programM->is_good ? programM : nullptr;
             }
         }
         auto clsys = ClSystem::singleton();
         if (!clsys)
             return nullptr;
         ProgramManager *programM = new ProgramManager(clsys->context, clsys->device, program_src);
-        record.insert(std::make_pair(&program_src, programM));
-        return programM->is_good ? programM : nullptr;
+        if (programM->is_good)
+        {
+            record.insert(std::make_pair(&program_src, programM));
+            return programM;
+        }
+        else
+        {
+            delete programM;
+            return nullptr;
+        }
     }
     ProgramManager(const ProgramManager &_Right) = delete; // 禁止复制
     ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
