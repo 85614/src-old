@@ -196,7 +196,32 @@ class KernelManager
 public:
     cl_kernel kernel;
     bool is_good = false; // 状态
-
+    static unordered_map<const string *, KernelManager *> record;
+    static KernelManager *make_kernel(const string &kernel_name, const string &program_src)
+    {
+        {
+            auto it = record.find(&kernel_name);
+            if (it != record.end())
+            {
+                KernelManager *kernelM = (*it).second;
+                return kernelM && kernelM->is_good ? kernelM : nullptr;
+            }
+        }
+        ProgramManager *programM = ProgramManager::make_kernel_program(program_src);
+        if (!programM || !programM->is_good)
+            return nullptr;
+        KernelManager *kernelM = new KernelManager(programM->program, kernel_name.c_str());
+        if (kernelM.is_good)
+        {
+            record.insert(std::make_pair(&kernel_name, kernelM));
+            return kernelM;
+        }
+        else
+        {
+            delete kernelM;
+            return nullptr;
+        }
+    }
     KernelManager(cl_program &program, const char *kernal_name)
     {
         cl_int err;
