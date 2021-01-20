@@ -241,7 +241,8 @@ namespace mxnet
       string LType_name = my_GetFullName(typeid(LType).name());
       MY_DEBUG(LType_name);
       MY_DEBUG(DType_name);
-      //mat(4*2) bias(2)
+      // mat(4*2) bias(2)
+      // 这四行，每一行一个group，
       return "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
                               __global " +
              DType_name + "* bias, "
@@ -316,7 +317,7 @@ namespace mxnet
       });
       if (!kernelM || !kernelM->is_good)
         return;
-      // 分配内存
+      // 分配内存，计算内存大小
       MemManager memM;
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
@@ -325,10 +326,9 @@ namespace mxnet
       if (!memM.is_good)
         return;
       // 设置参数
-
       setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
 
-      // 调用kernel
+      // 调用kernel，设置总工作项数和一个组的工作项数
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
