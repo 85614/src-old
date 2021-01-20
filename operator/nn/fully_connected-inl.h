@@ -295,7 +295,7 @@ namespace mxnet
                  Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
       auto clsys = ClSystem::singleton();
-      if (!clsys)
+      if (!clsys.is_good)
         return;
       // 分配内存
       MemManager memM;
