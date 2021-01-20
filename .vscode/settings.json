@@ -13,6 +13,7 @@
     "iterator": "cpp",
     "memory": "cpp",
     "random": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "utility": "cpp"
   }
 }

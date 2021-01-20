@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <time.h>
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -127,7 +128,34 @@ class ProgramManager
 public:
     cl_program program;
     bool is_good = false; // 状态
+    static unordered_map<string *, ProgramManager> record;
 
+    static ProgramManager *make_kernel_program(const string &program_src)
+    {
+        {
+
+            auto it = record.find(&program_src);
+            if (it == record.end())
+            {
+                auto clsys = ClSystem::singleton();
+                if (!clsys)
+                    return nullptr;
+                ProgramManager programM(clsys->context, clsys->device, src);
+                record.insert(std::make_pair(&progran_src, programM));
+                it = record.find(&program_src);
+            }
+            ProgramManager &programM = *it;
+            if (programM.is_good)
+                return &programM;
+            return nullptr;
+        }
+    }
+    ProgramManager(ProgramManager &&_Right)
+    {
+        program = _Right.program;
+        is_good = _Right.is_good;
+        _Right.is_good = false;
+    }
     ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
     {
         cl_int err;
@@ -172,7 +200,6 @@ public:
     {
         cl_int err;
         kernel = clCreateKernel(program, kernal_name, &err); //引号中名称换为改写后的kernel名称
-        
 
         if (kernel == 0)
         {
@@ -187,7 +214,7 @@ public:
 
     ~KernelManager()
     {
-        
+
         if (is_good)
             clReleaseKernel(kernel);
     }
