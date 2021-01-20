@@ -314,9 +314,12 @@ namespace mxnet
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         kernelM = make_add_bias_kernel<DType, LType>();
         f_t f = &make_add_bias_kernel_src<DType, LType>;
+        (*f)();
         MY_DEBUG(f);
       });
-      MY_DEBUG((f_t)(&make_add_bias_kernel_src<int, int>));
+      f_t f2 = &make_add_bias_kernel_src<int, int>      
+      (*f2)();
+      MY_DEBUG(f2);
       if (!kernelM || !kernelM->is_good)
         return;
       // 分配内存
@@ -336,11 +339,6 @@ namespace mxnet
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
 
-      
-      
-      
-      
-      
       cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
       
       clFinish(clsys->queue);

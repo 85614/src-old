@@ -172,7 +172,7 @@ public:
     {
         cl_int err;
         kernel = clCreateKernel(program, kernal_name, &err); //引号中名称换为改写后的kernel名称
-        MY_DEBUG(kernel);
+        
 
         if (kernel == 0)
         {
@@ -187,7 +187,7 @@ public:
 
     ~KernelManager()
     {
-        MY_DEBUG(kernel);
+        
         if (is_good)
             clReleaseKernel(kernel);
     }
