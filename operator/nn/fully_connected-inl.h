@@ -316,7 +316,8 @@ namespace mxnet
       if (!clsys)
         return;
       // 得到kernel
-      KernelManager *kernelM = make_add_bias_kernel<DType, LType>(kernel_name);
+      // KernelManager *kernelM = make_add_bias_kernel<DType, LType>(kernel_name);
+      KernelManager *kernelM = KernelManager::make_kernel(kernel_name, make_add_bias_kernel_src<DType, LType>(kernel_name));
       if (!kernelM || !kernelM->is_good)
         return;
       // 分配内存，计算内存大小
