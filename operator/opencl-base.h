@@ -84,6 +84,7 @@ public:
     {
         // 单例
         static ClSystem instance;
+        MY_DEBUG(instance.queue)
         return instance;
     }
     static ClSystem *construct()
@@ -112,6 +113,7 @@ private:
 public:
     ~ClSystem()
     {
+        MY_DEBUG(queue)
         if (is_good)
         {
             clReleaseContext(context);
@@ -171,7 +173,8 @@ public:
     {
         cl_int err;
         kernel = clCreateKernel(program, kernal_name, &err); //引号中名称换为改写后的kernel名称
-        MY_DEBUG(err);
+        MY_DEBUG(kernel);
+
         if (kernel == 0)
         {
             cout << "Can't load kernel\n";
@@ -185,11 +188,11 @@ public:
 
     ~KernelManager()
     {
+        MY_DEBUG(kernel);
         if (is_good)
             clReleaseKernel(kernel);
     }
 };
-
 
 inline void __setArgs(cl_kernel kernel, int index) {}
 template <typename _First, typename... _Args>
@@ -209,8 +212,8 @@ class MemManager
 {
     // 管理几个内存
 public:
-    vector<cl_mem> mems; // 或许可以用map实现，用字符串索引
-    bool is_good; // 状态
+    vector<cl_mem> mems;            // 或许可以用map实现，用字符串索引
+    bool is_good;                   // 状态
     void addMem(cl_context context, // The context where the memory will be allocated
                 cl_mem_flags flags,
                 size_t size, // The size in bytes
@@ -249,4 +252,3 @@ public:
         reset();
     }
 };
-
