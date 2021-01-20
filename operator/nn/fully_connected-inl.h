@@ -320,6 +320,7 @@ namespace mxnet
       static KernelManager kernelM(programM.program, "add_bias_kernel");
       if (kernelM.is_good)
         ans = &kernelM;
+      MY_DEBUG(ans);
       return ans;
     }
 

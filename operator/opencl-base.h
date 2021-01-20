@@ -102,10 +102,9 @@ private:
         // cl_int err;
         // cl_uint num;
         if (my_ClDeviceInitializer(context, device, queue))
-        {
-            return;
-        }
-        is_good = true;
+            is_good = false;
+        else
+            is_good = true;
     }
 
 public:
@@ -146,6 +145,7 @@ public:
             // clReleaseContext(context);
             clReleaseProgram(program);
             // clReleaseCommandQueue(queue);
+            is_good = false;
             return;
         }
         is_good = true;
@@ -182,7 +182,7 @@ public:
             clReleaseKernel(kernel);
     }
 };
-inline void setArgs(cl_kernel kernel, int index){}
+inline void setArgs(cl_kernel kernel, int index) {}
 template <typename _First, typename... _Args>
 void setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
 {
