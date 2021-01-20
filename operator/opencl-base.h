@@ -164,7 +164,7 @@ public:
 
     KernelManager(cl_program &program, const char *kernal_name)
     {
-        cl_kernel kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
+        kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
         if (kernel == 0)
         {
             cout << "Can't load kernel\n";
