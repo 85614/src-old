@@ -313,13 +313,7 @@ namespace mxnet
       typedef string (*f_t)();
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         kernelM = make_add_bias_kernel<DType, LType>();
-        f_t f = &make_add_bias_kernel_src<DType, LType>;
-        (*f)();
-        MY_DEBUG(f);
       });
-      f_t f2 = &make_add_bias_kernel_src<int, int>;
-      (*f2)();
-      MY_DEBUG(f2);
       if (!kernelM || !kernelM->is_good)
         return;
       // 分配内存
