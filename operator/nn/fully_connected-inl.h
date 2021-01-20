@@ -290,7 +290,7 @@ namespace mxnet
       if (ans)
         return ans;
       ProgramManager *programM = make_add_bias_kernel_program<DType, LType>();
-      if (!programM->is_good)
+      if (!programM || !programM->is_good)
         return nullptr;
       static KernelManager kernelM(programM->program, "add_bias_kernel");
       if (kernelM.is_good)
@@ -327,20 +327,26 @@ namespace mxnet
       if (!memM.is_good)
         return;
       // 设置参数
+      MY_DEBUG(__LINE__);
       setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
+      MY_DEBUG(__LINE__);
       // 调用kernel
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
 
+      MY_DEBUG(__LINE__);
       cl_int err = clEnqueueNDRangeKernel(clsys.queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+      MY_DEBUG(__LINE__);
       clFinish(clsys.queue);
 
       //取回结果
       if (err == CL_SUCCESS)
       {
         // 从GPU取回结果
+        MY_DEBUG(__LINE__);
         err = clEnqueueReadBuffer(clsys.queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
+        MY_DEBUG(__LINE__);
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
         {
