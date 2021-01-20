@@ -128,7 +128,7 @@ class ProgramManager
 public:
     cl_program program;
     bool is_good = false; // 状态
-    static unordered_map<string *, ProgramManager> record;
+    static unordered_map<const string *, ProgramManager> record;
 
     static ProgramManager *make_kernel_program(const string &program_src)
     {
@@ -152,6 +152,7 @@ public:
     }
     ProgramManager(ProgramManager &&_Right)
     {
+        // 仅允许移动复制，不允许拷贝复制
         program = _Right.program;
         is_good = _Right.is_good;
         _Right.is_good = false;
