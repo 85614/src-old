@@ -128,7 +128,7 @@ public:
     {
         cl_int err;
         const char *source = src.c_str();
-        MY_DEBUG(source);
+        // MY_DEBUG(source);
         cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
         err = clBuildProgram(program, 0, 0, 0, 0, 0);
         if (err != CL_SUCCESS)
@@ -165,8 +165,9 @@ public:
 
     KernelManager(cl_program &program, const char *kernal_name)
     {
-        
-        kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
+        cl_int err;
+        kernel = clCreateKernel(program, kernal_name, &err); //引号中名称换为改写后的kernel名称
+        MY_DEBUG(err);
         if (kernel == 0)
         {
             cout << "Can't load kernel\n";
