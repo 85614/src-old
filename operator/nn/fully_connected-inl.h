@@ -317,7 +317,7 @@ namespace mxnet
       static ProgramManager programM(clsys->context, clsys->device, src);
       if (!programM.is_good)
         return nullptr;
-      static KernelManager kernelM(programM->program, "add_bias_kernel");
+      static KernelManager kernelM(programM.program, "add_bias_kernel");
       if (kernelM.is_good)
         ans = &kernelM;
       return ans;
@@ -331,8 +331,8 @@ namespace mxnet
       MemManager memM;
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
-      memM.addMem(clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, NULL));
-      memM.addMem(clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_, NULL));
+      memM.addMem(clCreateBuffer(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, NULL));
+      memM.addMem(clCreateBuffer(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_, NULL));
       if (!memM.is_good)
         return;
       // 得到kernel
