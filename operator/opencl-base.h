@@ -175,12 +175,36 @@ public:
     void addMem(cl_context context, // The context where the memory will be allocated
                 cl_mem_flags flags,
                 size_t size, // The size in bytes
-                void *host_ptr,
-                cl_int *errcode_ret)
+                void *host_ptr)
     {
+        if (!is_good)
+            return;
+        cl_int errcode_ret;
+        cl_mem mem = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, &errcode_ret);
+        if (mem == 0 || errcode_ret != CL_SUCCESS)
+        {
+            is_good = false;
+        }
+        is_good = true;
+    }
+    void clear()
+    {
+        for (cl_mem &mem : mems)
+            if (mem)
+            {
+                clReleaseMemObject(mem);
+                mem = 0;
+            }
+        mems.clear();
+    }
+    void reset()
+    {
+        clear();
+        is_good = true;
     }
     ~MemManager()
     {
+        reset();
     }
 };
 
