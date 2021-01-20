@@ -99,15 +99,17 @@ public:
         }
     }
 
-}
+};
 
 class ProgramManager
 {
 public:
     cl_program program;
+    bool is_good = false;
     ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
     {
         cl_int err;
+        const char *source = src.c_str();
         cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
         err = clBuildProgram(program, 0, 0, 0, 0, 0);
         if (err != CL_SUCCESS)
@@ -127,8 +129,14 @@ public:
             // clReleaseCommandQueue(queue);
             return;
         }
+        is_good = true;
     }
-}
+    ~ProgramManager()
+    {
+        if (is_good)
+            clReleaseProgram(program);
+    }
+};
 
 template <typename DType>
 void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
