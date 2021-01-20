@@ -173,14 +173,13 @@ public:
     vector<cl_mem> mems;
     bool is_good;
     void addMem(cl_context context, // The context where the memory will be allocated
-
                 cl_mem_flags flags,
-
                 size_t size, // The size in bytes
-
                 void *host_ptr,
-
-                cl_int *errcode_ret) ~MemManager()
+                cl_int *errcode_ret)
+    {
+    }
+    ~MemManager()
     {
     }
 };
