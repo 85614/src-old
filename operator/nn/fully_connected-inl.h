@@ -335,8 +335,8 @@ namespace mxnet
       MemManager memM;
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
-      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
       memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
+      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
       if (!memM.is_good)
         return;
       // 得到kernel
@@ -360,7 +360,7 @@ namespace mxnet
       if (err == CL_SUCCESS)
       {
         // 从GPU取回结果
-        err = clEnqueueReadBuffer(clsys->queue, memM.mems[1], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
+        err = clEnqueueReadBuffer(clsys->queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
         {
