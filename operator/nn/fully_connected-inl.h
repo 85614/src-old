@@ -235,23 +235,27 @@ namespace mxnet
 把改写的OpenCL kernel 封装为Op的具体实现，其中主要内容即为OpenCL编程过程，即编写一个OpenCl代码时的所进行的步骤，和CUDA是无关的，
 */
     template <typename DType, typename LType>
-    std::string make_add_bias_kernel_src()
+    const std::string &make_add_bias_kernel_src()
     {
+      static string ans;
+      if (!ans.empty())
+        return ans;
       string DType_name = my_GetFullName(typeid(DType).name());
       string LType_name = my_GetFullName(typeid(LType).name());
       MY_DEBUG(LType_name);
       MY_DEBUG(DType_name);
       // mat(4*2) bias(2)
       // 这四行，每一行一个group，
-      return "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
+      return ans = "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
                               __global " +
-             DType_name + "* bias, "
-                          "int lead_dim, int bias_length) {"
-                          "typedef " +
-             LType_name + " LType;" // 放在函数内部主要是为了防止命名冲突
-                          "typedef " +
-             DType_name + " DType;" +
-             R"(const int nthreads_addbias = 256; 
+                   DType_name + "* bias, "
+                                "int lead_dim, int bias_length) {"
+                                "typedef " +
+                   LType_name + " LType;" // 放在函数内部主要是为了防止命名冲突
+                                "typedef " +
+                   DType_name + " DType;" +
+                   R"(
+      const int nthreads_addbias = 256; 
       LType scratch[512]; 
       const size_t N = bias_length * sizeof(DType)/sizeof(LType); // N是2 * D/L
       const size_t base = get_group_id(0) * N; 
@@ -300,37 +304,19 @@ namespace mxnet
 
       return ans;
     }
-    template <typename _Ty>
-    void fun()
-    {
-      static int i = sizeof(_Ty);
-      cout << i << " " << &i << endl;
-    }
 
-    inline int test()
+    template <typename DType, typename LType>
+    ProgramManager *add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+                                    Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
-      fun<int>();
-      fun<int>();
-      fun<double>();
-      cout << &(fun<int>) << endl;
-      cout << &(fun<double>) << endl;
 
-      return 0;
-    }
-    template <typename DType>
-    void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
-                 Tensor<cpu, 2, DType> out, Stream<cpu> *s)
-    {
-      test();
+      static string fun_name = "add_bias_kernel_" + my_GetFullName<DType>() + "_" + my_GetFullName<LType>();
+
       auto clsys = ClSystem::singleton();
       if (!clsys)
         return;
       // 得到kernel
-      KernelManager *kernelM = nullptr;
-      int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
-      MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
-        kernelM = make_add_bias_kernel<DType, LType>();
-      });
+      KernelManager *kernelM = make_add_bias_kernel<DType, LType>();
       if (!kernelM || !kernelM->is_good)
         return;
       // 分配内存，计算内存大小
@@ -366,6 +352,15 @@ namespace mxnet
           cout << "Can't run kernel or read back data\n";
         }
       }
+    }
+    template <typename DType>
+    void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+                 Tensor<cpu, 2, DType> out, Stream<cpu> *s)
+    {
+      int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
+      MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
+        add_bias_kernel<DType, LType>(bias, data, out, s);
+      });
     }
 
     // 使用my_ClKernelLauncher的版本

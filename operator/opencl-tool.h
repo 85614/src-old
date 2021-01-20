@@ -15,7 +15,12 @@ inline string my_GetFullName(const char* name)
     free(fullName);
     return ret_val;
 }
-
+template<typename _Ty>
+inline const string &my_GetFullName()
+{
+    static string name = my_GetFullName(typeid(_Ty).name());
+    return name;
+}
 
 inline int my_get_load_type(size_t N) {
   using namespace mshadow;
