@@ -307,7 +307,7 @@ namespace mxnet
       cout << i << " " << &i << endl;
     }
 
-    int test()
+    inline int test()
     {
       fun<int>();
       fun<double>();
