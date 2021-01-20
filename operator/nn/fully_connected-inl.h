@@ -295,7 +295,7 @@ namespace mxnet
       static KernelManager kernelM(programM->program, "add_bias_kernel");
       if (kernelM.is_good)
         ans = &kernelM;
-      MY_DEBUG(ans);
+      
       return ans;
     }
 
@@ -313,9 +313,10 @@ namespace mxnet
       typedef string (*f_t)();
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         kernelM = make_add_bias_kernel<DType, LType>();
-        // f_t f = &make_add_bias_kernel_src<DType, LType>;
-        // MY_DEBUG(f);
+        f_t f = &make_add_bias_kernel_src<DType, LType>;
+        MY_DEBUG(f);
       });
+      MY_DEBUG((f_t)(&make_add_bias_kernel_src<int, int>));
       if (!kernelM || !kernelM->is_good)
         return;
       // 分配内存
@@ -327,30 +328,30 @@ namespace mxnet
       if (!memM.is_good)
         return;
       // 设置参数
-      MY_DEBUG(__LINE__);
+      
       setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
-      MY_DEBUG(__LINE__);
+      
       // 调用kernel
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
 
-      MY_DEBUG(__LINE__);
-      MY_DEBUG(clsys->queue);
-      MY_DEBUG(__LINE__);
-      MY_DEBUG(kernelM->kernel);
-      MY_DEBUG(__LINE__);
+      
+      
+      
+      
+      
       cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
-      MY_DEBUG(__LINE__);
+      
       clFinish(clsys->queue);
 
       //取回结果
       if (err == CL_SUCCESS)
       {
         // 从GPU取回结果
-        MY_DEBUG(__LINE__);
+        
         err = clEnqueueReadBuffer(clsys->queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
-        MY_DEBUG(__LINE__);
+        
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
         {
