@@ -39,7 +39,7 @@ cl_mem clCreateBuffer(cl_context context, // The context where the memory will b
 
                       cl_int *errcode_ret);
 
-CL_MEM_READ_WRITE
+// CL_MEM_READ_WRITE
 
 // CL_MEM_WRITE_ONLY
 
@@ -60,4 +60,3 @@ cl_int clEnqueueReadBuffer(cl_command_queue command_queue,
                            cl_uint num_events_in_wait_list,
                            const cl_event *event_wait_list,
                            cl_event *event);
-                           
