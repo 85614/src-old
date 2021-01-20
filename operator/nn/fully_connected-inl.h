@@ -337,6 +337,7 @@ namespace mxnet
         return;
       // 得到kernel
       KernelManager *kernelM = nullptr;
+      int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         KernelM = make_add_bias_kernel<DType, LType>();
       });
