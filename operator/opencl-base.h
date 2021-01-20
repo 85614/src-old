@@ -128,6 +128,7 @@ public:
     {
         cl_int err;
         const char *source = src.c_str();
+        MY_DEBUG(source);
         cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
         err = clBuildProgram(program, 0, 0, 0, 0, 0);
         if (err != CL_SUCCESS)
@@ -164,25 +165,17 @@ public:
 
     KernelManager(cl_program &program, const char *kernal_name)
     {
-        cl_kernel tempkernel = clCreateKernel(program, "add_bias_kernel", 0); //引号中名称换为改写后的kernel名称
-        kernel = tempkernel;
-        if (tempkernel == 0)
+        
+        kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
+        if (kernel == 0)
         {
             cout << "Can't load kernel\n";
+            // clReleaseContext(context);
+            // clReleaseProgram(program);
+            // clReleaseCommandQueue(queue);
             return;
         }
         is_good = true;
-        return;
-        // kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
-        // if (kernel == 0)
-        // {
-        //     cout << "Can't load kernel\n";
-        //     // clReleaseContext(context);
-        //     // clReleaseProgram(program);
-        //     // clReleaseCommandQueue(queue);
-        //     return;
-        // }
-        // is_good = true;
     }
 
     ~KernelManager()
