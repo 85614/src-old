@@ -290,9 +290,9 @@ namespace mxnet
       if (ans)
         return ans;
       ProgramManager *programM = make_add_bias_kernel_program<DType, LType>();
-      if (!programM.is_good)
+      if (!programM->is_good)
         return nullptr;
-      static KernelManager kernelM(programM.program, "add_bias_kernel");
+      static KernelManager kernelM(programM->program, "add_bias_kernel");
       if (kernelM.is_good)
         ans = &kernelM;
       MY_DEBUG(ans);
