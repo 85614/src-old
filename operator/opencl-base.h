@@ -212,6 +212,7 @@ public:
             return;
         cl_int errcode_ret;
         cl_mem mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
+        mems.push_back(mem);
         if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
         {
             is_good = false;
