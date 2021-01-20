@@ -131,13 +131,13 @@ public:
 
     static ProgramManager *make_kernel_program(const string &program_src)
     {
-        static unordered_map<const string *, ProgramManager *> record;
+        static unordered_map<const string *, shared_ptr<ProgramManager>> record;
         {
             // 尝试获得过去的记录
             auto it = record.find(&program_src);
             if (it != record.end())
             {
-                ProgramManager *programM = (*it).second;
+                ProgramManager *programM = (*it).second.get();
                 return programM->is_good ? programM : nullptr;
             }
         }
@@ -147,7 +147,7 @@ public:
         ProgramManager *programM = new ProgramManager(clsys->context, clsys->device, program_src);
         if (programM->is_good)
         {
-            record.insert(std::make_pair(&program_src, programM));
+            record.insert(std::make_pair(&program_src, shared_ptr(programM)));
             return programM;
         }
         else
