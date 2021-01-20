@@ -516,7 +516,7 @@ namespace mxnet
     void AddBias1(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                   Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
-      static string kernel_name = "add_bias_kernel_" + my_GetFullName<DType>() + "_" + my_GetFullName<LType>();
+      static string kernel_name = "add_bias_kernel";
 
       cout << "test opencl-base.h\n";
       // int ltype = mxnet::common::cuda::get_load_type(bias.shape_[0] * sizeof(DType));
