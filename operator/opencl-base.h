@@ -124,14 +124,7 @@ class ProgramManager
 public:
     cl_program program;
     bool is_good = false;
-    static ProgramManager *construct(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
-    {
-        return new ProgramManager(context, device, src);
-    }
-    static void destuct(ProgramManager *ptr)
-    {
-        delete ptr;
-    }
+
     ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
     {
         cl_int err;
@@ -166,16 +159,13 @@ public:
 class KernelManager
 {
 public:
-    cl_kernel tempkernel;
+    cl_kernel kernel;
     bool is_good = false;
-    KernelManager(ProgramManager &pm, const char *kernal_name)
-        : KernelManager(pm.program, kernal_name)
-    {
-    }
+
     KernelManager(cl_program &program, const char *kernal_name)
     {
-        cl_kernel tempkernel = clCreateKernel(program, "add_bias_kernel", 0); //引号中名称换为改写后的kernel名称
-        if (tempkernel == 0)
+        cl_kernel kernel = clCreateKernel(program, kernal_name, 0); //引号中名称换为改写后的kernel名称
+        if (kernel == 0)
         {
             cout << "Can't load kernel\n";
             // clReleaseContext(context);
@@ -189,7 +179,7 @@ public:
     ~KernelManager()
     {
         if (is_good)
-            clReleaseKernel(tempkernel);
+            clReleaseKernel(kernel);
     }
 };
 void setArgs(cl_kernel kernel, int index);

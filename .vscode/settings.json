@@ -8,6 +8,7 @@
     "functional": "cpp",
     "initializer_list": "cpp",
     "xhash": "cpp",
-    "xmemory": "cpp"
+    "xmemory": "cpp",
+    "xlocale": "cpp"
   }
 }
