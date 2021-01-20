@@ -347,20 +347,15 @@ namespace mxnet
       });
       if (!kernelM || !kernelM->is_good)
         return;
-      MY_DEBUG(__LINE__)
       // 设置参数
       setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
       // 运行
-      MY_DEBUG(__LINE__)
 
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
-      MY_DEBUG(__LINE__)
       cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
-      MY_DEBUG(__LINE__)
       clFinish(clsys->queue);
-      MY_DEBUG(__LINE__)
       //执行结果在OpenCL设备内存中，所以要取回结果到cpu中
       if (err == CL_SUCCESS)
       {
