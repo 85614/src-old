@@ -336,6 +336,10 @@ namespace mxnet
       size_t work_size = lead_dim * nthreads_addbias;
 
       MY_DEBUG(__LINE__);
+      MY_DEBUG(clsys.queue);
+      MY_DEBUG(__LINE__);
+      MY_DEBUG(kernelM->kernel);
+      MY_DEBUG(__LINE__);
       cl_int err = clEnqueueNDRangeKernel(clsys.queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
       MY_DEBUG(__LINE__);
       clFinish(clsys.queue);
