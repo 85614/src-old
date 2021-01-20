@@ -128,10 +128,10 @@ class ProgramManager
 public:
     cl_program program;
     bool is_good = false; // 状态
-    static unordered_map<const string *, ProgramManager *> record;
 
     static ProgramManager *make_kernel_program(const string &program_src)
     {
+        static unordered_map<const string *, ProgramManager *> record;
         {
             // 尝试获得过去的记录
             auto it = record.find(&program_src);
@@ -196,9 +196,9 @@ class KernelManager
 public:
     cl_kernel kernel;
     bool is_good = false; // 状态
-    static unordered_map<const string *, KernelManager *> record;
     static KernelManager *make_kernel(const string &kernel_name, const string &program_src)
     {
+        static unordered_map<const string *, KernelManager *> record;
         {
             auto it = record.find(&kernel_name);
             if (it != record.end())
