@@ -317,7 +317,7 @@ namespace mxnet
         (*f)();
         MY_DEBUG(f);
       });
-      f_t f2 = &make_add_bias_kernel_src<int, int>      
+      f_t f2 = &make_add_bias_kernel_src<int, int>;
       (*f2)();
       MY_DEBUG(f2);
       if (!kernelM || !kernelM->is_good)
