@@ -277,35 +277,6 @@ namespace mxnet
     }
 
     template <typename DType, typename LType>
-    ProgramManager *make_add_bias_kernel_program(const string &kernel_name)
-    {
-      static ProgramManager *ans = nullptr;
-      string src = make_add_bias_kernel_src<DType, LType>(kernel_name);
-      auto clsys = ClSystem::singleton();
-      if (!clsys)
-        return nullptr;
-      static ProgramManager programM(clsys->context, clsys->device, src);
-      if (programM.is_good)
-        ans = &programM;
-      return ans;
-    }
-    template <typename DType, typename LType>
-    KernelManager *make_add_bias_kernel(const string &kernel_name)
-    {
-      static KernelManager *ans = nullptr;
-      if (ans)
-        return ans;
-      ProgramManager *programM = make_add_bias_kernel_program<DType, LType>(kernel_name);
-      if (!programM || !programM->is_good)
-        return nullptr;
-      static KernelManager kernelM(programM->program, kernel_name.c_str());
-      if (kernelM.is_good)
-        ans = &kernelM;
-
-      return ans;
-    }
-
-    template <typename DType, typename LType>
     void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
