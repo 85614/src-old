@@ -241,33 +241,34 @@ namespace mxnet
       string LType_name = my_GetFullName(typeid(LType).name());
       MY_DEBUG(LType_name);
       MY_DEBUG(DType_name);
+      //mat(4*2) bias(2)
       return "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
                               __global " +
-             DType_name + "* bias, \
-                              int lead_dim, int bias_length) {"
+             DType_name + "* bias, "
+                          "int lead_dim, int bias_length) {"
                           "typedef " +
              LType_name + " LType;" // 放在函数内部主要是为了防止命名冲突
                           "typedef " +
-             DType_name + " DType;"
-                          "const int nthreads_addbias = 256; \
-    LType scratch[512]; \
-    const size_t N = bias_length * sizeof(DType)/sizeof(LType); \
-    const size_t base = get_group_id(0) * N; \
-    __global LType* const mat_aligned = (__global LType*)(mat) + base; \
-    __global const LType* const bias_aligned = (__global LType*)(bias); \
-    LType* const scratch_bias_load = scratch + get_local_id(0); \
-    DType* const scratch_bias = (DType*)(scratch_bias_load); \
-    LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; \
-    DType* const scratch_mat = (DType*)(scratch_mat_load); \
-    for (int i = get_local_id(0); i < N; i += get_local_size(0)) { \
-        *scratch_bias_load = bias_aligned[i]; \
-        *scratch_mat_load = mat_aligned[i]; \
-        for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { \
-            scratch_mat[j] += scratch_bias[j]; \
-        } \
-        mat_aligned[i] = *scratch_mat_load; \
-    } \
-};";
+             DType_name + " DType;" +
+             R"(const int nthreads_addbias = 256; 
+      LType scratch[512]; 
+      const size_t N = bias_length * sizeof(DType)/sizeof(LType); // N是2 * D/L
+      const size_t base = get_group_id(0) * N; 
+      __global LType* const mat_aligned = (__global LType*)(mat) + base; 
+      __global const LType* const bias_aligned = (__global LType*)(bias); 
+      LType* const scratch_bias_load = scratch + get_local_id(0); 
+      DType* const scratch_bias = (DType*)(scratch_bias_load); 
+      LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; 
+      DType* const scratch_mat = (DType*)(scratch_mat_load); 
+      for (int i = get_local_id(0); i < N; i += get_local_size(0)) { // i += 256
+          *scratch_bias_load = bias_aligned[i]; // LType
+          *scratch_mat_load = mat_aligned[i]; // LType
+          for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { 
+              scratch_mat[j] += scratch_bias[j]; // DType
+          } 
+          mat_aligned[i] = *scratch_mat_load; // LType
+      } 
+    };)";
     }
 
     template <typename DType, typename LType>
@@ -295,7 +296,7 @@ namespace mxnet
       static KernelManager kernelM(programM->program, "add_bias_kernel");
       if (kernelM.is_good)
         ans = &kernelM;
-      
+
       return ans;
     }
 
@@ -310,7 +311,6 @@ namespace mxnet
       // 得到kernel
       KernelManager *kernelM = nullptr;
       int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
-      typedef string (*f_t)();
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         kernelM = make_add_bias_kernel<DType, LType>();
       });
@@ -325,25 +325,25 @@ namespace mxnet
       if (!memM.is_good)
         return;
       // 设置参数
-      
+
       setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
-      
+
       // 调用kernel
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
 
       cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
-      
+
       clFinish(clsys->queue);
 
       //取回结果
       if (err == CL_SUCCESS)
       {
         // 从GPU取回结果
-        
+
         err = clEnqueueReadBuffer(clsys->queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
-        
+
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
         {

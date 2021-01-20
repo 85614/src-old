@@ -9,6 +9,10 @@
     "initializer_list": "cpp",
     "xhash": "cpp",
     "xmemory": "cpp",
-    "xlocale": "cpp"
+    "xlocale": "cpp",
+    "iterator": "cpp",
+    "memory": "cpp",
+    "random": "cpp",
+    "xutility": "cpp"
   }
 }
