@@ -74,13 +74,15 @@ my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl_command_que
 
 class ClSystem
 {
+    // 运行环境
 public:
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
-    bool is_good = false;
+    bool is_good = false; // 状态
     static ClSystem &singleton()
     {
+        // 单例
         static ClSystem instance;
         return instance;
     }
@@ -120,9 +122,10 @@ public:
 
 class ProgramManager
 {
+    // 管理 program
 public:
     cl_program program;
-    bool is_good = false;
+    bool is_good = false; // 状态
 
     ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
     {
@@ -159,9 +162,10 @@ public:
 };
 class KernelManager
 {
+    // 管理 kernel
 public:
     cl_kernel kernel;
-    bool is_good = false;
+    bool is_good = false; // 状态
 
     KernelManager(cl_program &program, const char *kernal_name)
     {
@@ -185,24 +189,28 @@ public:
             clReleaseKernel(kernel);
     }
 };
-inline void setArgs(cl_kernel kernel, int index) {}
+
+
+inline void __setArgs(cl_kernel kernel, int index) {}
 template <typename _First, typename... _Args>
-void setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
+void __setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
 {
     clSetKernelArg(kernel, index, sizeof(first), &first);
-    setArgs(kernel, index + 1, args...);
+    __setArgs(kernel, index + 1, args...);
 }
-
+// 方便地设置参数
 template <typename... _Args>
 void setArgs(cl_kernel kernel, _Args &&... args)
 {
     setArgs(kernel, 0, args...);
 }
+
 class MemManager
 {
+    // 管理几个内存
 public:
-    vector<cl_mem> mems;
-    bool is_good;
+    vector<cl_mem> mems; // 或许可以用map实现，用字符串索引
+    bool is_good; // 状态
     void addMem(cl_context context, // The context where the memory will be allocated
                 cl_mem_flags flags,
                 size_t size, // The size in bytes
@@ -221,6 +229,7 @@ public:
     }
     void clear()
     {
+        // 清空
         for (cl_mem &mem : mems)
             if (mem)
             {
@@ -231,6 +240,7 @@ public:
     }
     void reset()
     {
+        // 重置
         clear();
         is_good = true;
     }
@@ -240,149 +250,3 @@ public:
     }
 };
 
-template <typename DType>
-void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
-                         Tensor<cpu, 2, DType> out, Stream<cpu> *s,
-                         string src)
-{
-#ifdef NK_TIMING_OPTION
-    clock_t time_start = clock();
-#endif
-
-    cl_int err;
-    cl_uint num;
-    cl_device_id device;
-    cl_context context;
-    cl_command_queue queue;
-    if (my_ClDeviceInitializer(context, device, queue))
-    {
-        return;
-    }
-
-    // kernel编写和编译
-    const char *source = src.c_str();
-
-    cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
-    err = clBuildProgram(program, 0, 0, 0, 0, 0);
-    if (err != CL_SUCCESS)
-    {
-        cout << "Can't load or build program\n";
-        if (err == CL_BUILD_PROGRAM_FAILURE)
-        {
-            size_t log_size;
-            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-            char *log = (char *)malloc(log_size);
-            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-            fprintf(stderr, "%s\n", log);
-            free(log);
-        }
-        clReleaseContext(context);
-        clReleaseProgram(program);
-        clReleaseCommandQueue(queue);
-        return;
-    }
-
-    //一个 OpenCL kernel 中可能有很多函数，这里获得函数的进入点。
-    cl_kernel tempkernel = clCreateKernel(program, "add_bias_kernel", 0); //引号中名称换为改写后的kernel名称
-    if (tempkernel == 0)
-    {
-        cout << "Can't load kernel\n";
-        clReleaseContext(context);
-        clReleaseProgram(program);
-        clReleaseCommandQueue(queue);
-        return;
-    }
-    size_t N = out.shape_[0] * out.shape_[1];
-    size_t bias_N = bias.shape_[0];
-    int lead_dim = data.size(0);
-    int bias_length = bias.shape_[0];
-    std::cout << "----------------------:" << sizeof(DType) << "  " << sizeof(float) << std::endl;
-
-    /*
-    Create device buffers(调用clCreateBuffer函数）
-　　　　Buffer中保存的是数据对象，就是设备执行程序需要的数据保存在其中。
-　　　　Buffer由上下文conetxt创建，这样上下文管理的多个设备就会共享Buffer中的数据。
-       所转的kernel有几个参数需要创建几个Buffer，另外再加上需要创建结果存储的Buffer。
-       结果存放在创建的cl_res,此处注意其中数据类型也要相应修改，即sizeof(cl_int)，例如：若为float则为sizeof(cl_float)
-    */
-    cl_mem cl_bias = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, NULL);
-    cl_mem cl_mat = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_, NULL);
-
-    if (cl_bias == 0 || cl_mat == 0)
-    {
-        cout << "Can't create OpenCL buffer\n";
-        clReleaseCommandQueue(queue);
-        clReleaseProgram(program);
-        clReleaseContext(context);
-        clReleaseKernel(tempkernel);
-        clReleaseMemObject(cl_bias);
-        clReleaseMemObject(cl_mat);
-        return;
-    }
-
-    //要执行kernel，只需要先设定kernel的参数，这里有四个参数。
-    clSetKernelArg(tempkernel, 0, sizeof(cl_mem), &cl_mat);
-    clSetKernelArg(tempkernel, 1, sizeof(cl_mem), &cl_bias);
-    clSetKernelArg(tempkernel, 2, sizeof(int), &lead_dim);
-    clSetKernelArg(tempkernel, 3, sizeof(int), &bias_length);
-
-    // kernel执行与时间统计
-    const int nthreads_addbias = 256;
-    size_t work_size = lead_dim * nthreads_addbias;
-#ifdef NK_TIMING_OPTION
-    int loop = 1000;
-    cl_event *timing_event = new cl_event[loop];
-    cl_int err_code, kerneltimer;
-    for (int j = 0; j < loop; j++)
-    {
-
-        err = clEnqueueNDRangeKernel(queue, tempkernel, 1, 0, &work_size, 0, 0, 0, &timing_event[j]);
-        clFinish(queue);
-    }
-    clock_t time_end = clock();
-
-    cl_ulong starttime, endtime;
-    unsigned long elapsed = 0;
-    for (int j = 0; j < loop; j++)
-    {
-        err_code = clGetEventProfilingInfo(timing_event[j], CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &starttime, NULL);
-        kerneltimer = clGetEventProfilingInfo(timing_event[j], CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endtime, NULL);
-        elapsed += (unsigned long)(endtime - starttime);
-    }
-#else
-    cout << "test nullptr\n";
-    err = clEnqueueNDRangeKernel(queue, tempkernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
-    clFinish(queue);
-#endif
-
-    //执行结果在OpenCL设备内存中，所以要取回结果到cpu中
-    if (err == CL_SUCCESS)
-    {
-        // 从GPU取回结果
-        err = clEnqueueReadBuffer(queue, cl_mat, CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
-        cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
-        if (err != CL_SUCCESS)
-        {
-            cout << "Can't run kernel or read back data\n";
-        }
-    }
-
-#ifdef NK_TIMING_OPTION
-    for (int j = 0; j < loop; j++)
-    {
-        clReleaseEvent(timing_event[j]);
-    }
-    delete[] timing_event;
-    cout << "opencl time use:" << 1000 * (time_end - time_start) / (double)CLOCKS_PER_SEC << "us" << endl;
-    cout << "opencl kernel time use:" << elapsed / 1000.0 / 1000 << "us" << endl;
-#endif
-
-    clReleaseMemObject(cl_bias);
-    clReleaseMemObject(cl_mat);
-    clReleaseKernel(tempkernel);
-    clReleaseProgram(program);
-    clReleaseCommandQueue(queue);
-    clReleaseContext(context);
-
-    return;
-}
