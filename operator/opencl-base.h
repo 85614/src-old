@@ -202,7 +202,7 @@ void __setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
 template <typename... _Args>
 void setArgs(cl_kernel kernel, _Args &&... args)
 {
-    setArgs(kernel, 0, args...);
+    __setArgs(kernel, 0, args...);
 }
 
 class MemManager

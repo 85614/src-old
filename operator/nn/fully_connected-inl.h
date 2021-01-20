@@ -271,16 +271,25 @@ namespace mxnet
     }
 
     template <typename DType, typename LType>
-    KernelManager *make_add_bias_kernel()
+    ProgramManager *make_add_bias_kernel_program()
     {
-      static KernelManager *ans = nullptr;
-      if (ans)
-        return ans;
+      static ProgramManager *ans = nullptr;
       string src = make_add_bias_kernel_src<DType, LType>();
       auto clsys = ClSystem::singleton();
       if (!clsys.is_good)
         return nullptr;
       static ProgramManager programM(clsys.context, clsys.device, src);
+      if (programM.is_good)
+        ans = &programM;
+      return ans;
+    }
+    template <typename DType, typename LType>
+    KernelManager *make_add_bias_kernel()
+    {
+      static KernelManager *ans = nullptr;
+      if (ans)
+        return ans;
+      ProgramManager *programM = make_add_bias_kernel_program<DType, LType>();
       if (!programM.is_good)
         return nullptr;
       static KernelManager kernelM(programM.program, "add_bias_kernel");
@@ -294,6 +303,7 @@ namespace mxnet
     void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                  Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
+
       auto clsys = ClSystem::singleton();
       if (!clsys.is_good)
         return;
@@ -302,6 +312,7 @@ namespace mxnet
       int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         kernelM = make_add_bias_kernel<DType, LType>();
+        MY_DEBUG(&make_add_bias_kernel<DType, LType>);
       });
       if (!kernelM || !kernelM->is_good)
         return;
