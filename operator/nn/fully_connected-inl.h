@@ -334,8 +334,8 @@ namespace mxnet
       MemManager memM;
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
-      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, NULL);
-      memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_, NULL);
+      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
+      memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
       if (!memM.is_good)
         return;
       // 得到kernel
