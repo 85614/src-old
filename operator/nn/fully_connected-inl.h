@@ -246,7 +246,7 @@ namespace mxnet
       MY_DEBUG(DType_name);
       // mat(4*2) bias(2)
       // 这四行，每一行一个group，
-      return ans = "__kernel " + kernel_name + "(__global " + DType_name + "* mat, \
+      return ans = "__kernel void " + kernel_name + "(__global " + DType_name + "* mat, \
                               __global " +
                    DType_name + "* bias, "
                                 "int lead_dim, int bias_length) {"
