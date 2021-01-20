@@ -182,7 +182,7 @@ public:
             clReleaseKernel(kernel);
     }
 };
-void setArgs(cl_kernel kernel, int index);
+void setArgs(cl_kernel kernel, int index){}
 template <typename _First, typename... _Args>
 void setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
 {
