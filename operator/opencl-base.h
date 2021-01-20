@@ -211,7 +211,7 @@ public:
         if (!programM || !programM->is_good)
             return nullptr;
         KernelManager *kernelM = new KernelManager(programM->program, kernel_name.c_str());
-        if (kernelM.is_good)
+        if (kernelM->is_good)
         {
             record.insert(std::make_pair(&kernel_name, kernelM));
             return kernelM;
