@@ -131,6 +131,7 @@ public:
 
     static ProgramManager *make_kernel_program(const string &program_src)
     {
+        // 好像声明成类得静态成员变量时，类外初始化得时候回报错
         static unordered_map<const string *, shared_ptr<ProgramManager>> record;
         {
             // 尝试获得过去的记录
@@ -138,7 +139,7 @@ public:
             if (it != record.end())
             {
                 ProgramManager *programM = (*it).second.get();
-                return programM->is_good ? programM : nullptr;
+                return programM && programM->is_good ? programM : nullptr;
             }
         }
         auto clsys = ClSystem::singleton();
@@ -198,7 +199,9 @@ public:
     bool is_good = false; // 状态
     static KernelManager *make_kernel(const string &kernel_name, const string &program_src)
     {
+        // 好像声明成类得静态成员变量时，类外初始化得时候回报错
         static unordered_map<const string *, shared_ptr<KernelManager>> record;
+
         {
             auto it = record.find(&kernel_name);
             if (it != record.end())
