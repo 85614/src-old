@@ -327,6 +327,9 @@ namespace mxnet
     void AddBias2(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                   Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
+      auto clsys = ClSystem::construct();
+      if (!clsys)
+        return;
       // 分配内存
       MemManager memM;
       size_t N = out.shape_[0] * out.shape_[1];
@@ -346,9 +349,7 @@ namespace mxnet
       // 设置参数
       setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
       // 运行
-      auto clsys = ClSystem::construct();
-      if (!clsys)
-        return;
+
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
