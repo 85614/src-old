@@ -98,7 +98,6 @@ public:
             clReleaseCommandQueue(queue);
         }
     }
-
 };
 
 class ProgramManager
@@ -135,6 +134,37 @@ public:
     {
         if (is_good)
             clReleaseProgram(program);
+    }
+};
+class KernelManager
+{
+public:
+    cl_kernel tempkernel;
+    bool is_good = false;
+    KernelManager(const ProgramManager &pm, const char *kernal_name)
+        : KernelManager(pm.program, kernal_name)
+    {
+    }
+    KernelManager(cl_program &program, const char *kernal_name)
+    {
+        cl_kernel tempkernel = clCreateKernel(program, "add_bias_kernel", 0); //引号中名称换为改写后的kernel名称
+        if (tempkernel == 0)
+        {
+            cout << "Can't load kernel\n";
+            // clReleaseContext(context);
+            // clReleaseProgram(program);
+            // clReleaseCommandQueue(queue);
+            return;
+        }
+        is_good = true;
+    }
+    void run()
+    {
+    }
+    ~KernelManager()
+    {
+        if (is_good)
+            clReleaseKernel(tempkernel);
     }
 };
 
