@@ -147,7 +147,7 @@ public:
         ProgramManager *programM = new ProgramManager(clsys->context, clsys->device, program_src);
         if (programM->is_good)
         {
-            record.insert(std::make_pair(&program_src, shared_ptr(programM)));
+            record.insert(std::make_pair(&program_src, (programM)));
             return programM;
         }
         else
@@ -213,7 +213,7 @@ public:
         KernelManager *kernelM = new KernelManager(programM->program, kernel_name.c_str());
         if (kernelM->is_good)
         {
-            record.insert(std::make_pair(&kernel_name, shared_ptr(kernelM)));
+            record.insert(std::make_pair(&kernel_name, (kernelM)));
             return kernelM;
         }
         else
