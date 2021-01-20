@@ -129,7 +129,7 @@ public:
         cl_int err;
         const char *source = src.c_str();
         // MY_DEBUG(source);
-        cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
+        program = clCreateProgramWithSource(context, 1, &source, 0, 0);
         err = clBuildProgram(program, 0, 0, 0, 0, 0);
         if (err != CL_SUCCESS)
         {
