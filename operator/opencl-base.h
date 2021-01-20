@@ -128,35 +128,29 @@ class ProgramManager
 public:
     cl_program program;
     bool is_good = false; // 状态
-    static unordered_map<const string *, ProgramManager> record;
+    static unordered_map<const string *, ProgramManager *> record;
 
     static ProgramManager *make_kernel_program(const string &program_src)
     {
         {
 
             auto it = record.find(&program_src);
-            if (it == record.end())
+            if (it != record.end())
             {
-                auto clsys = ClSystem::singleton();
-                if (!clsys)
-                    return nullptr;
-                ProgramManager programM(clsys->context, clsys->device, src);
-                record.insert(std::make_pair(&progran_src, programM));
-                it = record.find(&program_src);
+                ProgramManager *programM = (*it).second;
+                if (programM.is_good)
+                    return &programM;
+                return nullptr;
             }
-            ProgramManager &programM = *it;
-            if (programM.is_good)
-                return &programM;
-            return nullptr;
         }
+        auto clsys = ClSystem::singleton();
+        if (!clsys)
+            return nullptr;
+        ProgramManager *programM = new ProgramManager(clsys->context, clsys->device, program_src);
+        record.insert(std::make_pair(&program_src, programM));
+        return programM->is_good ? programM : nullptr;
     }
-    ProgramManager(ProgramManager &&_Right)
-    {
-        // 仅允许移动复制，不允许拷贝复制
-        program = _Right.program;
-        is_good = _Right.is_good;
-        _Right.is_good = false;
-    }
+    ProgramManager(const ProgramManager &_Right) = delete; // 禁止复制
     ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
     {
         cl_int err;
