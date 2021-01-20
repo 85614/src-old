@@ -79,7 +79,24 @@ public:
     cl_context context;
     cl_command_queue queue;
     bool is_good = false;
+    static ClSystem &singleton()
+    {
+        static ClSystem instance;
+        return instance;
+    }
+    static ClSystem *construct()
+    {
+        ClSystem &instance = singleton();
+        if (instance.is_good)
+            return &instance;
+        return nullptr;
+    }
+    static void destruct(ClSystem *clsys)
+    {
+        // do nothing
+    }
 
+private:
     ClSystem()
     {
         // cl_int err;
@@ -91,6 +108,7 @@ public:
         is_good = true;
     }
 
+public:
     ~ClSystem()
     {
         if (is_good)
@@ -106,6 +124,14 @@ class ProgramManager
 public:
     cl_program program;
     bool is_good = false;
+    static ProgramManager *construct(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
+    {
+        return new ProgramManager(context, device, src);
+    }
+    static void destuct(ProgramManager *ptr)
+    {
+        delete ptr;
+    }
     ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
     {
         cl_int err;
@@ -315,6 +341,7 @@ void my_ClKernelLauncher(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
     cl_int err_code, kerneltimer;
     for (int j = 0; j < loop; j++)
     {
+
         err = clEnqueueNDRangeKernel(queue, tempkernel, 1, 0, &work_size, 0, 0, 0, &timing_event[j]);
         clFinish(queue);
     }
