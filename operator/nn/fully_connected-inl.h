@@ -269,48 +269,14 @@ namespace mxnet
     } \
 };";
     }
-    template <typename DType, typename LType>
-    std::string make_AddBias()
-    {
-      string DType_name = my_GetFullName(typeid(DType).name());
-      string LType_name = my_GetFullName(typeid(LType).name());
-      MY_DEBUG(LType_name);
-      MY_DEBUG(DType_name);
-      return "__kernel void add_bias_kernel(__global " + DType_name + "* mat, \
-                              __global " +
-             DType_name + "* bias, \
-                              int lead_dim, int bias_length) {"
-                          "typedef " +
-             LType_name + " LType;" // 放在函数内部主要是为了防止命名冲突
-                          "typedef " +
-             DType_name + " DType;"
-                          "const int nthreads_addbias = 256; \
-    LType scratch[512]; \
-    const size_t N = bias_length * sizeof(DType)/sizeof(LType); \
-    const size_t base = get_group_id(0) * N; \
-    __global LType* const mat_aligned = (__global LType*)(mat) + base; \
-    __global const LType* const bias_aligned = (__global LType*)(bias); \
-    LType* const scratch_bias_load = scratch + get_local_id(0); \
-    DType* const scratch_bias = (DType*)(scratch_bias_load); \
-    LType* const scratch_mat_load = scratch_bias_load + nthreads_addbias; \
-    DType* const scratch_mat = (DType*)(scratch_mat_load); \
-    for (int i = get_local_id(0); i < N; i += get_local_size(0)) { \
-        *scratch_bias_load = bias_aligned[i]; \
-        *scratch_mat_load = mat_aligned[i]; \
-        for (int j = 0; j < sizeof(LType)/sizeof(DType); ++j) { \
-            scratch_mat[j] += scratch_bias[j]; \
-        } \
-        mat_aligned[i] = *scratch_mat_load; \
-    } \
-};";
-    }
+    
     template <typename DType, typename LType>
     KernelManager *make_add_bias_kernel()
     {
       static KernelManager *ans = nullptr;
       if (ans)
         return ans;
-      string src = make_AddBias<DType, LType>();
+      string src = make_add_bias_kernel_src<DType, LType>();
       auto clsys = ClSystem::construct();
       if (!clsys)
         return nullptr;
@@ -380,7 +346,7 @@ namespace mxnet
       int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
 
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
-        string src = make_AddBias<DType, LType>();
+        string src = make_add_bias_kernel_src<DType, LType>();
         my_ClKernelLauncher<DType>(bias, data, out, s, src);
         // add_bias_kernel<DType, LType><<<data.size(0),
         //                                 nthreads_addbias,
