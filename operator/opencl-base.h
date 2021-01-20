@@ -237,7 +237,7 @@ public:
         }
         is_good = true;
     }
-
+    KernelManager(const KernelManager &) = delete;
     ~KernelManager()
     {
 
