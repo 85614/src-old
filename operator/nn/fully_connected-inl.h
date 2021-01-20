@@ -300,12 +300,27 @@ namespace mxnet
 
       return ans;
     }
+    template <typename _Ty>
+    void fun()
+    {
+      static int i = sizeof(_Ty);
+      cout << i << " " << &i << endl;
+    }
 
+    int test()
+    {
+      fun<int>();
+      fun<double>();
+      cout << &(fun<int>) << endl;
+      cout << &(fun<double>) << endl;
+
+      return 0;
+    }
     template <typename DType>
     void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                  Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
-
+      test();
       auto clsys = ClSystem::singleton();
       if (!clsys)
         return;
