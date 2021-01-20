@@ -4,6 +4,10 @@
     "xiosbase": "cpp",
     "xstring": "cpp",
     "vector": "cpp",
-    "queue": "cpp"
+    "queue": "cpp",
+    "functional": "cpp",
+    "initializer_list": "cpp",
+    "xhash": "cpp",
+    "xmemory": "cpp"
   }
 }

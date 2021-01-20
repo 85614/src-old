@@ -158,9 +158,40 @@ public:
         }
         is_good = true;
     }
-    void run()
+
+private:
+    void setArgs(int index);
+    template <typename _First, typename... _Args>
+    void setArgs(int index, _First &first, _Args &... args)
+    {
+        clSetKernelArg(tempkernel, index, sizeof(first), &cl_mat);
+        setArgs(index + 1, args...);
+    }
+
+public:
+    template <typename... _Args>
+    void setArgs(_Args &... args)
+    {
+        setArgs(0, args...);
+    }
+    cl_int run(cl_command_queue command_queue,
+               cl_kernel kernel,
+               cl_uint work_dim, // Choose if we are using 1D, 2D or 3D work-items and work-groups
+               const size_t *global_work_offset,
+               const size_t *global_work_size, // The total number of work-items (must have work_dim dimensions)
+               const size_t *local_work_size,  // The number of work-items per work-group (must have work_dim dimensions)
+               cl_uint num_events_in_wait_list,
+               const cl_event *event_wait_list,
+               cl_event *event)
     {
     }
+    // void run(cl_command_queue &queue, bool finish = true)
+    // {
+    //     err = clEnqueueNDRangeKernel(queue, tempkernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+    //     if (finish)
+    //         clFinish(queue);
+    //     return err;
+    // }
     ~KernelManager()
     {
         if (is_good)
@@ -180,8 +211,8 @@ public:
         if (!is_good)
             return;
         cl_int errcode_ret;
-        cl_mem mem = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_, &errcode_ret);
-        if (mem == 0 || errcode_ret != CL_SUCCESS)
+        cl_mem mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
+        if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
         {
             is_good = false;
         }
