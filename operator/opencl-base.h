@@ -198,12 +198,12 @@ public:
     bool is_good = false; // 状态
     static KernelManager *make_kernel(const string &kernel_name, const string &program_src)
     {
-        static unordered_map<const string *, KernelManager *> record;
+        static unordered_map<const string *, shared_ptr<KernelManager>> record;
         {
             auto it = record.find(&kernel_name);
             if (it != record.end())
             {
-                KernelManager *kernelM = (*it).second;
+                KernelManager *kernelM = (*it).second.get();
                 return kernelM && kernelM->is_good ? kernelM : nullptr;
             }
         }
@@ -213,7 +213,7 @@ public:
         KernelManager *kernelM = new KernelManager(programM->program, kernel_name.c_str());
         if (kernelM->is_good)
         {
-            record.insert(std::make_pair(&kernel_name, kernelM));
+            record.insert(std::make_pair(&kernel_name, shared_ptr(kernelM)));
             return kernelM;
         }
         else
