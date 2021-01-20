@@ -495,7 +495,7 @@ namespace mxnet
       int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
 
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
-        string src = make_AddBias<DType, LType>();
+        string src = make_add_bias_kernel_src<DType, LType>();
         my_ClKernelLauncher<DType>(bias, data, out, s, src);
         // add_bias_kernel<DType, LType><<<data.size(0),
         //                                 nthreads_addbias,
