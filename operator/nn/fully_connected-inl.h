@@ -354,7 +354,9 @@ namespace mxnet
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias;
+      MY_DEBUG(__LINE__);
       cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+      MY_DEBUG(__LINE__);
       clFinish(clsys->queue);
       //执行结果在OpenCL设备内存中，所以要取回结果到cpu中
       if (err == CL_SUCCESS)
