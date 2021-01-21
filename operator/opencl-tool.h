@@ -46,20 +46,26 @@ inline int my_get_load_type(size_t N)
 }
 
 
-template <typename... _Args>
-const string &make_kernel_name(const char *);
-template <typename First, typename... _Args>
-const string &make_kernel_name(const char *basic_name)
+template <typename _Ty>
+inline const string& my_GetFullName()
 {
-  // 给basic_name拼接类型信息
-  static string name = make_kernel_name<_Args...>(basic_name) + "_" + my_GetFullName<First>();
-  // 递归实现虽然会有不必要的静态变量，但是消耗的内存并不大
-  return name;
+	
+	return typeid(_Ty).name();
+}
+template <typename... _Args>
+string my_strcat(const string &first, _Args &&...args)
+{
+	return first + my_strcat(std::forward<_Args>(args)...);
 }
 template<>
-const string &make_kernel_name<>(const char *basic_name)
+string my_strcat(const string &first)
 {
-  static string name(basic_name);
-  cout << "Test make_kernel_name\n";
-  return name;
+	return first;
+}
+
+template <typename... _Args>
+const string& make_kernel_name(const char*basic_kernel_name) {
+	
+	static string name = my_strcat(basic_kernel_name, ("_" + my_GetFullName<_Args>())...);
+	return name;
 }
