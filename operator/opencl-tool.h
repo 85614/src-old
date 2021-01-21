@@ -58,7 +58,7 @@ inline string my_strcat(const string &first)
 
 template <typename... _Args>
 const string& make_kernel_name(const char*basic_kernel_name) {
-	
+	cout << "Test make_kernel_name\n";
 	static string name = my_strcat(basic_kernel_name, ("_" + my_GetFullName<_Args>())...);
 	return name;
 }
