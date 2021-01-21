@@ -91,7 +91,7 @@ public:
 private:
     ClSystem()
     {
-        
+
         // 这里就直接用my_ClDeviceInitializer了
         if (my_ClDeviceInitializer(context, device, queue))
             is_good = false;
@@ -272,18 +272,18 @@ class MemManager
 {
     // 管理几个内存
 public:
-    vector<cl_mem> mems;            // 或许可以用map实现，用字符串索引
+    vector<cl_mem> mems; // 或许可以用map实现，用字符串索引
 
-    // 当某个内存分配失败时，释放所有的资源      
+    // 当某个内存分配失败时，释放所有的资源
     int addMem(cl_mem &mem, cl_context context, // The context where the memory will be allocated
-                cl_mem_flags flags,
-                size_t size, // The size in bytes
-                void *host_ptr)
+               cl_mem_flags flags,
+               size_t size, // The size in bytes
+               void *host_ptr)
     {
         cl_int errcode_ret;
         mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
         if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
-            return 1;        
+            return 1;
         mems.push_back(mem);
         return 0;
     }
@@ -303,8 +303,6 @@ public:
         clear();
     }
 };
-
-
 
 void manage(cl_context context, cl_device_id device, cl_command_queue queue);
 void manage(cl_program program);
@@ -330,7 +328,7 @@ cl_kernel make_kernel(const string &kernel_name, const string &program_src, bool
 
 // 返回true/false判断获取资源成功
 // 要先声明变量
-// 不能用auto xxx = 
+// 不能用auto xxx =
 bool get_context(cl_context &context);
 bool get_device(cl_device_id &device);
 bool get_command_queue(cl_command_queue &queue);
@@ -346,3 +344,24 @@ cl_command_queue *get_command_queue(); // 这三个不能函数退出时释放�
 // shared_ptr<cl_program> make_kernel_program(const string &program_src);
 // shared_ptr<cl_kernel> make_kernel(const string &kernel_name, const string &program_sr
 
+class Manager
+{
+    cl_device_id device;
+    cl_context context;
+    cl_command_queue queue;
+    bool init = false;
+
+public:
+    Manager(const Manager &) = delete;
+    static Manager &instance();
+    cl_context get_context();
+    cl_device_id get_device();
+    cl_command_queue get_command_queue();
+    operator bool() { return init; } // 判断状态
+
+    // 用这个接口，kernel不能兼容调用完自动释放
+    cl_kernel *make_kernel(const string &kernel_name, const string &program_src);
+
+private:
+    cl_program *make_kernel_program(const string &program_src);
+}
