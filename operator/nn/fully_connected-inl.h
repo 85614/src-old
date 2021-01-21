@@ -300,8 +300,9 @@ namespace mxnet
       size_t bias_N = bias.shape_[0];
       // 使用MemManager统一分配管理管理
       cl_mem cl_bias, cl_mat;
-      memM.addMem(cl_mat, clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
-      memM.addMem(cl_bias, clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
+      if (memM.addMem(cl_mat, clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_) ||
+          memM.addMem(cl_bias, clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
+        return;
       if (!memM.is_good)
         return;
       // 设置参数
@@ -803,4 +804,3 @@ namespace std
   };
 } // namespace std
 #endif // MXNET_OPERATOR_NN_FULLY_CONNECTED_INL_H_
-

@@ -282,7 +282,7 @@ public:
                 void *host_ptr)
     {
         if (!is_good)
-            return;
+            return 1;
         cl_int errcode_ret;
         mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
         mems.push_back(mem);
