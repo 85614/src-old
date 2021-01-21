@@ -45,13 +45,6 @@ inline int my_get_load_type(size_t N)
   }
 }
 
-
-template <typename _Ty>
-inline const string& my_GetFullName()
-{
-	
-	return typeid(_Ty).name();
-}
 template <typename... _Args>
 string my_strcat(const string &first, _Args &&...args)
 {
