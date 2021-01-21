@@ -111,9 +111,10 @@ private:
     }
 
 public:
+    ClSystem(const ClSystem &) = delete;
     ~ClSystem()
     {
-        MY_DEBUG(queue)
+
         if (is_good)
         {
             clReleaseContext(context);

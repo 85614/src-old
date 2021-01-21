@@ -234,9 +234,18 @@ namespace mxnet
     /*
 把改写的OpenCL kernel 封装为Op的具体实现，其中主要内容即为OpenCL编程过程，即编写一个OpenCl代码时的所进行的步骤，和CUDA是无关的，
 */
+
     template <typename DType, typename LType>
-    const std::string &make_add_bias_kernel_src(const string &kernel_name)
+    const string &add_bias_kernel_name()
     {
+      static string kernel_name = "add_bias_kernel_" + my_GetFullName<DType>() + "_" + my_GetFullName<LType>();
+      return kernel_name;
+    }
+
+    template <typename DType, typename LType>
+    const std::string &make_add_bias_kernel_src()
+    {
+      const kernel_name = add_bias_kernel_name<DType, LType>();
       static string ans;
       if (!ans.empty())
         return ans;
@@ -280,21 +289,23 @@ namespace mxnet
     void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
-
-      static string kernel_name = "add_bias_kernel_" + my_GetFullName<DType>() + "_" + my_GetFullName<LType>();
+      const kernel_name = add_bias_kernel_name<DType, LType>();
+      // 应该不会有指针类型，数组类型什么的吧
       MY_DEBUG(kernel_name);
       auto clsys = ClSystem::singleton();
       if (!clsys)
         return;
       // 得到kernel
-      // KernelManager *kernelM = make_add_bias_kernel<DType, LType>(kernel_name);
-      KernelManager *kernelM = KernelManager::make_kernel(kernel_name, make_add_bias_kernel_src<DType, LType>(kernel_name));
+      const string &program_src = make_add_bias_kernel_src<DType, LType>();
+      KernelManager *kernelM = KernelManager::make_kernel(kernel_name, program_src);
       if (!kernelM || !kernelM->is_good)
         return;
-      // 分配内存，计算内存大小
-      MemManager memM;
+      // 分配内存
+      MemManager memM; // 管理内存
+      // 计算内存大小
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
+      // 统一管理
       memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
       memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
       if (!memM.is_good)
@@ -305,7 +316,7 @@ namespace mxnet
       // 调用kernel，设置总工作项数和一个组的工作项数
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
-      size_t work_size = lead_dim * nthreads_addbias;
+      size_t work_size = lead_dim * nthreads_addbias; // 总工作项数
 
       cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
 
@@ -325,6 +336,7 @@ namespace mxnet
         }
       }
     }
+
     template <typename DType>
     void AddBias(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                  Tensor<cpu, 2, DType> out, Stream<cpu> *s)
@@ -335,7 +347,6 @@ namespace mxnet
       });
     }
 
-  
 #endif //MY_OPENCLTEST
 
     template <typename xpu, typename DType>
