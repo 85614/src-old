@@ -51,7 +51,7 @@ template <typename First, typename... _Args>
 const string &make_kernel_name(const char *basic_name)
 {
   // 给basic_name拼接类型信息
-  static string name = make_kernel_name<_Args...>(basic_name) + "_" + my_GetFullName<DType>();
+  static string name = make_kernel_name<_Args...>(basic_name) + "_" + my_GetFullName<First>();
   // 递归实现虽然会有不必要的静态变量，但是消耗的内存并不大
   return name;
 }
