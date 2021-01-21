@@ -238,7 +238,7 @@ namespace mxnet
     template <typename DType, typename LType>
     const std::string &make_add_bias_kernel_src()
     {
-      // const string &kernel_name = add_bias_kernel_name<DType, LType>();
+      // 生成add_bias_kernel的源代码，返回静态字符串变量
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
       static string ans;
       if (!ans.empty())
@@ -247,8 +247,8 @@ namespace mxnet
       string LType_name = my_GetFullName(typeid(LType).name());
       MY_DEBUG(LType_name);
       MY_DEBUG(DType_name);
-      // mat(4*2) bias(2)
-      // 这四行，每一行一个group，
+      // 使用typedef 减少字符串拼接，同时也便于编程
+      // 使用原始字符串，代替'\'
       return ans = "__kernel void " + kernel_name + "(__global " + DType_name + "* mat, \
                               __global " +
                    DType_name + "* bias, "
@@ -283,9 +283,7 @@ namespace mxnet
     void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
-      // const string &kernel_name = add_bias_kernel_name<DType, LType>();
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
-      // 应该不会有指针类型，数组类型什么的吧
       MY_DEBUG(kernel_name);
       auto clsys = ClSystem::singleton();
       if (!clsys)
@@ -300,14 +298,13 @@ namespace mxnet
       // 计算内存大小
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
-      // 统一管理
+      // 使用MemManager统一分配管理管理
       memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
       memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
       if (!memM.is_good)
         return;
       // 设置参数
       setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
-
       // 调用kernel，设置总工作项数和一个组的工作项数
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
@@ -338,6 +335,7 @@ namespace mxnet
     {
       int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
+        // 测试两次调用
         add_bias_kernel<DType, LType>(bias, data, out, s);
         add_bias_kernel<DType, LType>(bias, data, out, s);
         cout << "Test double call\n";

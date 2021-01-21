@@ -75,35 +75,24 @@ my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl_command_que
 
 class ClSystem
 {
-    // 运行环境
+    // 管理运行环境
 public:
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
-    bool is_good = false; // 状态
+    bool is_good = false; // 状态，状态良好，则可用，且析构时释放资源
     static ClSystem *singleton()
     {
         // 单例
         static ClSystem instance;
         return &instance;
     }
-    static ClSystem *construct()
-    {
-        ClSystem &instance = *singleton();
-        if (instance.is_good)
-            return &instance;
-        return nullptr;
-    }
-    static void destruct(ClSystem *clsys)
-    {
-        // do nothing
-    }
 
 private:
     ClSystem()
     {
-        // cl_int err;
-        // cl_uint num;
+        
+        // 这里就直接用my_ClDeviceInitializer了
         if (my_ClDeviceInitializer(context, device, queue))
             is_good = false;
         else
@@ -114,7 +103,6 @@ public:
     ClSystem(const ClSystem &) = delete;
     ~ClSystem()
     {
-
         if (is_good)
         {
             clReleaseContext(context);
@@ -128,11 +116,15 @@ class ProgramManager
     // 管理 program
 public:
     cl_program program;
-    bool is_good = false; // 状态
+    bool is_good = false; // 状态，状态良好，则可用，且析构时释放资源
 
     static ProgramManager *make_kernel_program(const string &program_src)
     {
+        // 通过源代码字符串得到程序
+        // program_src必须要是静态的
+
         // 好像声明成类得静态成员变量时，类外初始化得时候回报错
+        // 使用字符串的指针作为索引
         static unordered_map<const string *, shared_ptr<ProgramManager>> record;
         {
             // 尝试获得过去的记录
@@ -199,11 +191,17 @@ class KernelManager
     // 管理 kernel
 public:
     cl_kernel kernel;
-    bool is_good = false; // 状态
+    bool is_good = false; // 状态，状态良好，则可用，且析构时释放资源
+
     static KernelManager *make_kernel(const string &kernel_name, const string &program_src)
     {
+        // 通过kernel名和源代码得到kernel
+        // 通过make_kernel_name得到的kernel_name，自动就是静态的
+
         // 好像声明成类得静态成员变量时，类外初始化得时候回报错
+        // 使用字符串的指针作为索引
         static unordered_map<const string *, shared_ptr<KernelManager>> record;
+
         {
             auto it = record.find(&kernel_name);
             if (it != record.end())
@@ -254,10 +252,12 @@ public:
     }
 };
 
+// 设置参数所用的工具函数
 inline void __setArgs(cl_kernel kernel, int index) {}
 template <typename _First, typename... _Args>
 void __setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
 {
+    // 从index开始设置参数
     clSetKernelArg(kernel, index, sizeof(first), &first);
     __setArgs(kernel, index + 1, args...);
 }
@@ -265,7 +265,7 @@ void __setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
 template <typename... _Args>
 void setArgs(cl_kernel kernel, _Args &&... args)
 {
-    __setArgs(kernel, 0, args...);
+    __setArgs(kernel, 0, args...); // 从0开始设置参数
 }
 
 class MemManager
@@ -273,7 +273,9 @@ class MemManager
     // 管理几个内存
 public:
     vector<cl_mem> mems;            // 或许可以用map实现，用字符串索引
-    bool is_good;                   // 状态
+    bool is_good = true;             
+
+    // 当某个内存分配失败时，释放所有的资源      
     void addMem(cl_context context, // The context where the memory will be allocated
                 cl_mem_flags flags,
                 size_t size, // The size in bytes
@@ -288,7 +290,6 @@ public:
         {
             is_good = false;
         }
-        is_good = true;
     }
     void clear()
     {
