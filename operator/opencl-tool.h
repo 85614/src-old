@@ -51,7 +51,7 @@ string my_strcat(const string &first, _Args &&...args)
 	return first + my_strcat(std::forward<_Args>(args)...);
 }
 template<>
-string my_strcat(const string &first)
+inline string my_strcat(const string &first)
 {
 	return first;
 }
