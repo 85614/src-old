@@ -299,12 +299,13 @@ namespace mxnet
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
       // 使用MemManager统一分配管理管理
-      memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
-      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
+      cl_mem cl_bias, cl_mat;
+      memM.addMem(cl_mat, clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
+      memM.addMem(cl_bias, clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
       if (!memM.is_good)
         return;
       // 设置参数
-      setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
+      setArgs(kernelM->kernel, cl_mat, cl_bias, data.size(0), bias.shape_[0]);
       // 调用kernel，设置总工作项数和一个组的工作项数
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
@@ -319,7 +320,7 @@ namespace mxnet
       {
         // 从GPU取回结果
 
-        err = clEnqueueReadBuffer(clsys->queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
+        err = clEnqueueReadBuffer(clsys->queue, cl_mat, CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
 
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)

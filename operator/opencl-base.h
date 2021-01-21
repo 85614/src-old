@@ -276,7 +276,7 @@ public:
     bool is_good = true;             
 
     // 当某个内存分配失败时，释放所有的资源      
-    void addMem(cl_context context, // The context where the memory will be allocated
+    int addMem(cl_mem &mem, cl_context context, // The context where the memory will be allocated
                 cl_mem_flags flags,
                 size_t size, // The size in bytes
                 void *host_ptr)
@@ -284,12 +284,14 @@ public:
         if (!is_good)
             return;
         cl_int errcode_ret;
-        cl_mem mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
+        mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
         mems.push_back(mem);
         if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
         {
             is_good = false;
+            return 1;
         }
+        return 0;
     }
     void clear()
     {
@@ -313,3 +315,46 @@ public:
         reset();
     }
 };
+
+
+
+void manage(cl_context context, cl_device_id device, cl_command_queue queue);
+void manage(cl_program program);
+void manage(cl_kernel kernel);
+
+tuple<cl_context *, cl_device_id *, cl_command_queue *> get_environment();
+
+// 指针非空判断获取资源成功
+// 指针用起来可能不太方便
+cl_context *get_context();
+cl_device_id *get_device();
+cl_command_queue *get_command_queue();
+cl_program *make_kernel_program(const string &program_src);
+cl_kernel *make_kernel(const string &kernel_name, const string &program_src);
+
+// err 为flase 判断获取资源成功
+// 要先声明一个bool变量
+cl_context get_context(bool &err);
+cl_device_id get_device(bool &err);
+cl_command_queue get_command_queue(bool &err);
+cl_program make_kernel_program(const string &program_src, bool &err);
+cl_kernel make_kernel(const string &kernel_name, const string &program_src, bool &err);
+
+// 返回true/false判断获取资源成功
+// 要先声明变量
+// 不能用auto xxx = 
+bool get_context(cl_context &context);
+bool get_device(cl_device_id &device);
+bool get_command_queue(cl_command_queue &queue);
+bool make_kernel_program(const string &program_src, cl_program &program);
+bool make_kernel(const string &kernel_name, const string &program_src, cl_kernel &kernel);
+
+// 智能指针可以兼容更多的实现
+// 既可以自动释放资源，也可以之后再释放资源
+// 可以当成普通指针*ptr一样用
+cl_context *get_context();
+cl_device_id *get_device();
+cl_command_queue *get_command_queue(); // 这三个不能函数退出时释放资源，因为下面这两个都要用到
+shared_ptr<cl_program> make_kernel_program(const string &program_src);
+shared_ptr<cl_kernel> make_kernel(const string &kernel_name, const string &program_sr
+
