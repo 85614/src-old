@@ -2,10 +2,7 @@
 #include <string>
 using namespace std;
 
-#define MY_DEBUG(x)                      \
-  {                                      \
-    cout << #x << " is " << (x) << endl; \
-  }
+#define MY_DEBUG(x) void(cout << #x << " is " << (x) << endl);
 
 // 返回值为右值，为const没有用，而且还让编译器不能进行返回值优化
 inline string my_GetFullName(const char *name)
@@ -46,20 +43,22 @@ inline int my_get_load_type(size_t N)
 }
 
 template <typename... _Args>
-string my_strcat(const string &first, _Args &&...args)
-{
-	return first + my_strcat(std::forward<_Args>(args)...);
+string my_strcat(const string &first, _Args &&... args)
+{ // 字符串连接
+  return first + my_strcat(std::forward<_Args>(args)...);
 }
-template<>
+template <>
 inline string my_strcat(const string &first)
 {
-	return first;
+  return first;
 }
 
 template <typename... _Args>
-const string& make_kernel_name(const char*basic_kernel_name) {
-	cout << "Test make_kernel_name\n";
-	static string name = my_strcat(basic_kernel_name, ("_" + my_GetFullName<_Args>())...);
+const string &make_kernel_name(const char *basic_kernel_name)
+{
+  // 获取添加类型信息的kernel名，得到静态string变量
+  cout << "Test make_kernel_name\n";
+  static string name = my_strcat(basic_kernel_name, ("_" + my_GetFullName<_Args>())...);
   // 应该不会有指针类型，数组类型什么的吧
-	return name;
+  return name;
 }
