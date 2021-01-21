@@ -136,6 +136,7 @@ public:
         static unordered_map<const string *, shared_ptr<ProgramManager>> record;
         {
             // 尝试获得过去的记录
+            cout << program_src << " get program from record\n";
             auto it = record.find(&program_src);
             if (it != record.end())
             {
@@ -143,6 +144,7 @@ public:
                 return programM && programM->is_good ? programM : nullptr;
             }
         }
+        cout << program_src << " new program\n";
         auto clsys = ClSystem::singleton();
         if (!clsys)
             return nullptr;
@@ -202,8 +204,8 @@ public:
     {
         // 好像声明成类得静态成员变量时，类外初始化得时候回报错
         static unordered_map<const string *, shared_ptr<KernelManager>> record;
-
         {
+            cout << &kernel_name << " get kernel from record\n";
             auto it = record.find(&kernel_name);
             if (it != record.end())
             {
@@ -211,6 +213,7 @@ public:
                 return kernelM && kernelM->is_good ? kernelM : nullptr;
             }
         }
+        cout << &kernel_name << " new kernel\n";
         ProgramManager *programM = ProgramManager::make_kernel_program(program_src);
         if (!programM || !programM->is_good)
             return nullptr;
