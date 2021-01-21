@@ -10,7 +10,7 @@
 #else
 #include <CL/cl.h>
 #endif
-#include "opencl-func.h"
+
 #include "opencl-tool.h"
 using namespace std;
 
