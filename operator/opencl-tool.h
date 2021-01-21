@@ -46,7 +46,8 @@ inline int my_get_load_type(size_t N)
 }
 
 
-
+template <typename... _Args>
+const string &make_kernel_name(const char *);
 template <typename First, typename... _Args>
 const string &make_kernel_name(const char *basic_name)
 {
