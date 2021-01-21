@@ -236,13 +236,6 @@ namespace mxnet
 */
 
     template <typename DType, typename LType>
-    const string &add_bias_kernel_name()
-    {
-      static string kernel_name = "add_bias_kernel_" + my_GetFullName<DType>() + "_" + my_GetFullName<LType>();
-      return kernel_name;
-    }
-
-    template <typename DType, typename LType>
     const std::string &make_add_bias_kernel_src()
     {
       // const string &kernel_name = add_bias_kernel_name<DType, LType>();
