@@ -344,6 +344,8 @@ namespace mxnet
       int ltype = my_get_load_type(bias.shape_[0] * sizeof(DType));
       MXNET_LOAD_TYPE_SWITCH(ltype, LType, {
         add_bias_kernel<DType, LType>(bias, data, out, s);
+        add_bias_kernel<DType, LType>(bias, data, out, s);
+        cout << "Test double call\n";
       });
     }
 
