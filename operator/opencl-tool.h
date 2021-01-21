@@ -2,7 +2,7 @@
 #include <string>
 using namespace std;
 
-#define MY_DEBUG(x) void(cout << #x << " is " << (x) << endl);
+#define MY_DEBUG(x) (void)(cout << #x " is " << (x) << endl);
 
 // 返回值为右值，为const没有用，而且还让编译器不能进行返回值优化
 inline string my_GetFullName(const char *name)
