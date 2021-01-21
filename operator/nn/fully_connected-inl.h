@@ -245,7 +245,8 @@ namespace mxnet
     template <typename DType, typename LType>
     const std::string &make_add_bias_kernel_src()
     {
-      const string &kernel_name = add_bias_kernel_name<DType, LType>();
+      // const string &kernel_name = add_bias_kernel_name<DType, LType>();
+      const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
       static string ans;
       if (!ans.empty())
         return ans;
@@ -289,7 +290,8 @@ namespace mxnet
     void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
-      const string &kernel_name = add_bias_kernel_name<DType, LType>();
+      // const string &kernel_name = add_bias_kernel_name<DType, LType>();
+      const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
       // 应该不会有指针类型，数组类型什么的吧
       MY_DEBUG(kernel_name);
       auto clsys = ClSystem::singleton();
@@ -809,3 +811,4 @@ namespace std
   };
 } // namespace std
 #endif // MXNET_OPERATOR_NN_FULLY_CONNECTED_INL_H_
+
