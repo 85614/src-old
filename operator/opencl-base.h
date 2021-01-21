@@ -136,15 +136,15 @@ public:
         static unordered_map<const string *, shared_ptr<ProgramManager>> record;
         {
             // 尝试获得过去的记录
-            cout << program_src << " get program from record\n";
             auto it = record.find(&program_src);
             if (it != record.end())
             {
+                cout << &program_src << " get program from record\n";
                 ProgramManager *programM = (*it).second.get();
                 return programM && programM->is_good ? programM : nullptr;
             }
         }
-        cout << program_src << " new program\n";
+        cout << &program_src << " new program\n";
         auto clsys = ClSystem::singleton();
         if (!clsys)
             return nullptr;
@@ -205,10 +205,11 @@ public:
         // 好像声明成类得静态成员变量时，类外初始化得时候回报错
         static unordered_map<const string *, shared_ptr<KernelManager>> record;
         {
-            cout << &kernel_name << " get kernel from record\n";
             auto it = record.find(&kernel_name);
             if (it != record.end())
             {
+                cout << &kernel_name << " get kernel from record\n";
+
                 KernelManager *kernelM = (*it).second.get();
                 return kernelM && kernelM->is_good ? kernelM : nullptr;
             }
