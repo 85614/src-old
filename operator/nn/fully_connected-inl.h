@@ -303,8 +303,6 @@ namespace mxnet
       if (memM.addMem(cl_mat, clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_) ||
           memM.addMem(cl_bias, clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
         return;
-      if (!memM.is_good)
-        return;
       // 设置参数
       setArgs(kernelM->kernel, cl_mat, cl_bias, data.size(0), bias.shape_[0]);
       // 调用kernel，设置总工作项数和一个组的工作项数

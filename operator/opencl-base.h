@@ -273,7 +273,6 @@ class MemManager
     // 管理几个内存
 public:
     vector<cl_mem> mems;            // 或许可以用map实现，用字符串索引
-    bool is_good = true;             
 
     // 当某个内存分配失败时，释放所有的资源      
     int addMem(cl_mem &mem, cl_context context, // The context where the memory will be allocated
@@ -281,16 +280,11 @@ public:
                 size_t size, // The size in bytes
                 void *host_ptr)
     {
-        if (!is_good)
-            return 1;
         cl_int errcode_ret;
         mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
-        mems.push_back(mem);
         if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
-        {
-            is_good = false;
-            return 1;
-        }
+            return 1;        
+        mems.push_back(mem);
         return 0;
     }
     void clear()
@@ -304,15 +298,9 @@ public:
             }
         mems.clear();
     }
-    void reset()
-    {
-        // 重置
-        clear();
-        is_good = true;
-    }
     ~MemManager()
     {
-        reset();
+        clear();
     }
 };
 
@@ -355,6 +343,6 @@ bool make_kernel(const string &kernel_name, const string &program_src, cl_kernel
 cl_context *get_context();
 cl_device_id *get_device();
 cl_command_queue *get_command_queue(); // 这三个不能函数退出时释放资源，因为下面这两个都要用到
-shared_ptr<cl_program> make_kernel_program(const string &program_src);
-shared_ptr<cl_kernel> make_kernel(const string &kernel_name, const string &program_sr
+// shared_ptr<cl_program> make_kernel_program(const string &program_src);
+// shared_ptr<cl_kernel> make_kernel(const string &kernel_name, const string &program_sr
 
