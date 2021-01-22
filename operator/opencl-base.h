@@ -135,7 +135,7 @@ public:
     KernelManager() : state(0) {}
     KernelManager(cl_program _Program) : program(_Program), state(program_inited) {}
     KernelManager(cl_program _Program, cl_kernel _Kernel)
-        : program(_Program), kernel state(program_inited | kernel_inited) {}
+        : program(_Program), kernel(_Kernel), state(program_inited | kernel_inited) {}
     bool inited() const
     {
         return (state & kernel_inited) && (state & program_inited);
