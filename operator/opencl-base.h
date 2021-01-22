@@ -120,13 +120,41 @@ inline bool __make_program(cl_program &program, cl_context &context, cl_device_i
     return NK_SUCCESS;
 }
 
+class KernelManager
+{
+    enum
+    {
+        program_inited = 1,
+        kernel_inited = 2
+    };
+    int state;
+    cl_program program;
+    cl_kernel kernel;
+
+public:
+    KernelManager() : state(0) {}
+    KernelManager(cl_program _Program) : program(_Program), state(program_inited) {}
+    KernelManager(cl_program _Program, cl_kernel _Kernel)
+        : program(_Program), kernel state(program_inited | kernel_inited) {}
+    bool inited() const
+    {
+        return (state & kernel_inited) && (state & program_inited);
+    }
+
+private:
+    KernelManager(cl_program _Program, cl_kernel _Kernel, int _State)
+        : program(_Program), kernel(_Kernel), state(_State)
+    {
+    }
+};
+
 class Manager
 {
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
-    unordered_map<const string *, cl_program> program_record; // 程序的记录
-    unordered_map<const string *, cl_kernel> kernel_record;   // kernel的记录
+    unordered_map<const string *, cl_program> program_record; // 程序的记录，源代码为键值
+    unordered_map<const string *, cl_kernel> kernel_record;   // kernel的记录，kernel名为键值
     bool init = false;
     Manager();
 
@@ -134,8 +162,8 @@ public:
     Manager(const Manager &) = delete; // 禁止复制
     ~Manager();
     static Manager &instance(); // 可以单例也可以不
-    // operator bool() { return init; } // 判断状态，NK_SUCCESS是0，就很难受，不用这个了
-    bool inited() { return init; }
+    // operator bool() const { return init; } // 判断状态，NK_SUCCESS是0，就很难受，还是不用这个了
+    bool inited() const { return init; }
 
     cl_context get_context() { return context; }
     cl_device_id get_device() { return device; }
@@ -146,6 +174,42 @@ public:
 
 private:
     int make_kernel_program(cl_program &program, const string &program_src);
+};
+
+class MemManager
+{
+    // 管理几个内存
+public:
+    vector<cl_mem> mems; // 或许可以用map实现，用字符串索引
+
+    // 添加管理的资源
+    int addMem(cl_mem &mem, cl_context context, // The context where the memory will be allocated
+               cl_mem_flags flags,
+               size_t size, // The size in bytes
+               void *host_ptr)
+    {
+        cl_int errcode_ret;
+        mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
+        if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
+            return NK_FAIL;
+        mems.push_back(mem);
+        return NK_SUCCESS;
+    }
+    void clear()
+    {
+        // 清空
+        for (cl_mem &mem : mems)
+            if (mem)
+            {
+                clReleaseMemObject(mem);
+                mem = 0;
+            }
+        mems.clear();
+    }
+    ~MemManager()
+    {
+        clear();
+    }
 };
 
 inline Manager &Manager::instance()
@@ -169,8 +233,10 @@ inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, co
         }
     }
     cl_program program;
+    // 获得program
     if (NK_SUCCESS != make_kernel_program(program, program_src))
         return NK_FAIL;
+    // 生成kernel
     if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
         return NK_FAIL;
     kernel_record.insert(make_pair(&kernel_name, kernel));
@@ -189,6 +255,7 @@ inline int Manager::make_kernel_program(cl_program &program, const string &progr
             return NK_SUCCESS;
         }
     }
+    // 生成program
     if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
         return NK_FAIL;
     program_record.insert(make_pair(&program_src, program));
@@ -222,39 +289,3 @@ void setArgs(cl_kernel kernel, _Args &&... args)
 {
     __setArgs(kernel, 0, args...); // 从0开始设置参数
 }
-
-class MemManager
-{
-    // 管理几个内存
-public:
-    vector<cl_mem> mems; // 或许可以用map实现，用字符串索引
-
-    // 当某个内存分配失败时，释放所有的资源
-    int addMem(cl_mem &mem, cl_context context, // The context where the memory will be allocated
-               cl_mem_flags flags,
-               size_t size, // The size in bytes
-               void *host_ptr)
-    {
-        cl_int errcode_ret;
-        mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
-        if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
-            return NK_FAIL;
-        mems.push_back(mem);
-        return NK_SUCCESS;
-    }
-    void clear()
-    {
-        // 清空
-        for (cl_mem &mem : mems)
-            if (mem)
-            {
-                clReleaseMemObject(mem);
-                mem = 0;
-            }
-        mems.clear();
-    }
-    ~MemManager()
-    {
-        clear();
-    }
-};

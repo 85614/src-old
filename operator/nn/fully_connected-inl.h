@@ -297,12 +297,13 @@ namespace mxnet
       if (NK_SUCCESS != manager.make_kernel(kernel, kernel_name, program_src))
         return;
       // 分配内存
-      MemManager memManager; // 管理内存
+      MemManager memManager; // 管理内存，析构时自动释放资源
       // 计算内存大小
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
       // 使用MemManager统一分配管理管理
       cl_mem cl_bias, cl_mat;
+      // 分配内存，并赋值给cl_bias，cl_mat
       if (NK_SUCCESS != memManager.addMem(cl_mat, context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_) ||
           NK_SUCCESS != memManager.addMem(cl_bias, context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
         return;
