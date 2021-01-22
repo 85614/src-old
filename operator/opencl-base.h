@@ -170,7 +170,7 @@ public:
     cl_device_id get_device() { return device; }
     cl_command_queue get_queue() { return queue; }
 
-    KernelManger make_kernel(const string &kernel_name, const string &program_src);
+    KernelManager make_kernel(const string &kernel_name, const string &program_src);
     // 用这个接口，kernel不能实现自动释放，只能由Manager来释放
     int make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
 
@@ -224,7 +224,7 @@ inline Manager::Manager()
     init = NK_SUCCESS == my_ClDeviceInitializer(context, device, queue);
 }
 
-KernelManger Manager::make_kernel(const string &kernel_name, const string &program_src)
+KernelManager Manager::make_kernel(const string &kernel_name, const string &program_src)
 {
     // 生成program
     cl_program program;
