@@ -224,7 +224,7 @@ inline Manager::Manager()
     init = NK_SUCCESS == my_ClDeviceInitializer(context, device, queue);
 }
 
-KernelManager Manager::make_kernel(const string &kernel_name, const string &program_src)
+inline KernelManager Manager::make_kernel(const string &kernel_name, const string &program_src)
 {
     // 生成program
     cl_program program;
