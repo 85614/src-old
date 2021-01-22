@@ -89,9 +89,9 @@ inline bool __make_kernel(cl_kernel &kernel, cl_program &program, const char *ke
         // clReleaseContext(context);
         // clReleaseProgram(program);
         // clReleaseCommandQueue(queue);
-        return false;
+        return NK_FAIL;
     }
-    return true;
+    return NK_SUCCESS;
 }
 
 inline bool __make_program(cl_program &program, cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
@@ -116,9 +116,9 @@ inline bool __make_program(cl_program &program, cl_context &context, cl_device_i
         // clReleaseContext(context);
         clReleaseProgram(program);
         // clReleaseCommandQueue(queue);
-        return false;
+        return NK_FAIL;
     }
-    return true;
+    return NK_SUCCESS;
 }
 
 class ClSystem
