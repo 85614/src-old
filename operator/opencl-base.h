@@ -235,46 +235,46 @@ inline Manager::Manager()
 //         return KernelManager(program);
 //     return KernelManager(program, kernel);
 // }
-inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
-{
-    {
-        // 尝试从记录里获得
-        auto it = kernel_record.find(program_src);
-        if (it != kernel_record.end())
-        {
-            kernel = (*it).second;
-            return NK_SUCCESS;
-        }
-    }
-    cl_program program;
-    // 获得program
-    if (NK_SUCCESS != make_kernel_program(program, program_src))
-        return NK_FAIL;
-    // 生成kernel
-    if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
-        return NK_FAIL;
-    kernel_record.insert(make_pair(kernel_name, kernel));
-    return NK_SUCCESS;
-};
+// inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
+// {
+//     {
+//         // 尝试从记录里获得
+//         auto it = kernel_record.find(program_src);
+//         if (it != kernel_record.end())
+//         {
+//             kernel = (*it).second;
+//             return NK_SUCCESS;
+//         }
+//     }
+//     cl_program program;
+//     // 获得program
+//     if (NK_SUCCESS != make_kernel_program(program, program_src))
+//         return NK_FAIL;
+//     // 生成kernel
+//     if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
+//         return NK_FAIL;
+//     kernel_record.insert(make_pair(kernel_name, kernel));
+//     return NK_SUCCESS;
+// };
 
-inline int Manager::make_kernel_program(cl_program &program, const string &program_src)
-{
+// inline int Manager::make_kernel_program(cl_program &program, const string &program_src)
+// {
 
-    {
-        // 尝试从记录里获得
-        auto it = program_record.find(program_src);
-        if (it != program_record.end())
-        {
-            program = (*it).second;
-            return NK_SUCCESS;
-        }
-    }
-    // 生成program
-    if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
-        return NK_FAIL;
-    program_record.insert(make_pair(program_src, program));
-    return NK_SUCCESS;
-}
+//     {
+//         // 尝试从记录里获得
+//         auto it = program_record.find(program_src);
+//         if (it != program_record.end())
+//         {
+//             program = (*it).second;
+//             return NK_SUCCESS;
+//         }
+//     }
+//     // 生成program
+//     if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
+//         return NK_FAIL;
+//     program_record.insert(make_pair(program_src, program));
+//     return NK_SUCCESS;
+// }
 
 inline Manager::~Manager()
 {
