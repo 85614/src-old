@@ -409,43 +409,4 @@ bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const st
     return false;
 
     kernel_record.insert(make_pair(&kernel_name, ))
-}
-
-class RefCounter
-{
-    size_t *pCounter;
-    void count() { ++*pCounter; }
-    void uncount() { --*pCounter; }
-    size_t *newCounter()
-    {
-        size_t *ptr = new size_t(1);
-        if (!ptr)
-        {
-            cerr << "引用计数内存分配失败\n";
-            exit(1); // 真不知道怎么办，
-        }
-        return ptr;
-    }
-
-public:
-    RefCounter() : pCounter(newCounter()) {}
-    RefCounter(const RefCounter &_Right) : pCounter(_Right.pCounter) { ++*pCounter; }
-    RefCounter(RefCounter &&_Right) : pCounter(_Right.pCounter) { _Right.pCounter = newCounter(); }
-    RefCounter &operator=(const RefCounter &_Right)
-    {
-        pCounter = _Right.pCounter;
-        ++*pCounter;
-    }
-    RefCounter &operator=(RefCounter &&_Right)
-    {
-        pCounter = _Right.pCounter;
-        _Right.pCounter = newCounter();
-    }
-    size_t count() const { return *pCounter; }
-    ~RefCounter()
-    {
-        --*pCounter;
-        if (*pCounter == 0)
-            delete pCounter;
-    }
 };
