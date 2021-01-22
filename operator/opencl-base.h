@@ -14,7 +14,10 @@
 #include "opencl-tool.h"
 using namespace std;
 
-enum { NK_SUCCESS };
+enum
+{
+    NK_SUCCESS
+};
 
 // 获取设备信息，初始化context和queue
 inline bool
@@ -75,7 +78,7 @@ my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl_command_que
     return 0;
 }
 
-bool make_kernel(cl_kernel &kernel, cl_program &program, const char *kernal_name)
+inline bool __make_kernel(cl_kernel &kernel, cl_program &program, const char *kernal_name)
 {
     cl_int err;
     kernel = clCreateKernel(program, kernal_name, &err); //引号中名称换为改写后的kernel名称
@@ -90,7 +93,7 @@ bool make_kernel(cl_kernel &kernel, cl_program &program, const char *kernal_name
     return true;
 }
 
-bool make_program(cl_program &program, cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
+inline bool __make_program(cl_program &program, cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
 {
     cl_int err;
     const char *source = src.c_str();
@@ -348,21 +351,19 @@ public:
     }
 };
 
-
-
-
 class Manager
 {
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
     unordered_map<const string *, cl_program> program_record; // 程序的记录
-    unordered_map<const string *, cl_kernel> kernel_record; // kernel的记录
+    unordered_map<const string *, cl_kernel> kernel_record;   // kernel的记录
     bool init = false;
+
 public:
     Manager(const Manager &) = delete; // 禁止复制
-    static Manager &instance(); // 可以单例也可以不
-    operator bool() { return init; } // 判断状态
+    static Manager &instance();        // 可以单例也可以不
+    operator bool() { return init; }   // 判断状态
 
     cl_context get_context();
     cl_device_id get_device();
@@ -373,14 +374,19 @@ public:
     // cl_kernel *make_kernel(const string &kernel_name, const string &program_src);
 
     // 这样的话就由KernelManger来自动释放
-    // struct KernelManager; 
+    // struct KernelManager;
     // KernelManager make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
 
 private:
+    Manager();
     // cl_program *make_kernel_program(const string &program_src);
     bool make_kernel_program(cl_program &program, const string &program_src);
 };
 
+inline Manager::Manager()
+{
+    init =  NK_SUCCESS == my_ClDeviceInitializer(context, device, queue));
+}
 inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
 {
     {
@@ -394,12 +400,9 @@ inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, c
         }
     }
     cl_program program;
-    if (!this->make_kernel_program(program, program_src))
+    if (!make_kernel_program(program, program_src))
         return false;
-    if (!::make_kernel(kernel, program, kernel_name.c_str()))
-    {
-    }
-    return false;
-
-    // kernel_record.insert(make_pair(&kernel_name, ))
+    if (NK_SUCCESS == __make_kernel(kernel, program, kernal_name.c_str()))
+        kernel_record.insert(make_pair(&kernel_name, kernel));
+    return true;
 };
