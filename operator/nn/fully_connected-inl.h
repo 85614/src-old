@@ -280,7 +280,7 @@ namespace mxnet
     }
 
     template <typename DType, typename LType>
-    void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+    void add_bias_kernel1(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
@@ -330,7 +330,7 @@ namespace mxnet
     }
 
     template <typename DType, typename LType>
-    void add_bias_kernel1(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
+    void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                           Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
