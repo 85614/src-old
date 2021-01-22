@@ -366,7 +366,7 @@ public:
 
     cl_context get_context();
     cl_device_id get_device();
-    cl_command_queue get_command_queue();
+    cl_command_queue get_queue();
 
     // 用这个接口，kernel不能实现自动释放，只能由Manager来释放
     bool make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
@@ -394,7 +394,7 @@ bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const st
         }
     }
     cl_program program;
-    if (!make_kernel_program(program, &program_src))
+    if (!this->make_kernel_program(program, &program_src))
         return false;
     if (!::make_kernel(kernel, program, kernel_name.c_str()))
     {
