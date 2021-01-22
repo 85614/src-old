@@ -336,16 +336,16 @@ namespace mxnet
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
       MY_DEBUG(kernel_name);
       //
-      auto &manager = Manager::instance();
+      Manager &manager = Manager::instance(); 
       if (!manager)
         return;
-      auto context = manager.get_context();
-      auto queue = manager.get_queue();
+      auto context = manager.get_context(); // 获得context
+      auto queue = manager.get_queue();     // 获得queue
       return;
       // 得到kernel
       const string &program_src = make_add_bias_kernel_src<DType, LType>();
-      auto pkernel = manager.make_kernel(kernel_name, program_src);
-      if (!pkernel)
+      cl_kernel kernel;
+      if (!manager.make_kernel(kernel, kernel_name, program_src))
         return;
       // 分配内存
       MemManager memManager; // 管理内存
@@ -358,13 +358,13 @@ namespace mxnet
           memManager.addMem(cl_bias, context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
         return;
       // 设置参数
-      setArgs(kernelM->kernel, cl_mat, cl_bias, data.size(0), bias.shape_[0]);
+      setArgs(kernel, cl_mat, cl_bias, data.size(0), bias.shape_[0]);
       // 调用kernel，设置总工作项数和一个组的工作项数
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
       size_t work_size = lead_dim * nthreads_addbias; // 总工作项数
       cl_int err;
-      err = clEnqueueNDRangeKernel(queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+      err = clEnqueueNDRangeKernel(queue, kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
       // 同步
       clFinish(queue);
       //取回结果

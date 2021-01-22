@@ -73,6 +73,48 @@ my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl_command_que
     return 0;
 }
 
+bool make_kernel(cl_kernel &kernel, cl_program &program, const char *kernal_name)
+{
+    cl_int err;
+    kernel = clCreateKernel(program, kernal_name, &err); //引号中名称换为改写后的kernel名称
+    if (kernel == 0)
+    {
+        cout << "Can't load kernel\n";
+        // clReleaseContext(context);
+        // clReleaseProgram(program);
+        // clReleaseCommandQueue(queue);
+        return false;
+    }
+    return true;
+}
+
+bool make_program(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
+{
+    cl_int err;
+    const char *source = src.c_str();
+    // MY_DEBUG(source);
+    program = clCreateProgramWithSource(context, 1, &source, 0, 0);
+    err = clBuildProgram(program, 0, 0, 0, 0, 0);
+    if (err != CL_SUCCESS)
+    {
+        cout << "Can't load or build program\n";
+        if (err == CL_BUILD_PROGRAM_FAILURE)
+        {
+            size_t log_size;
+            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+            char *log = (char *)malloc(log_size);
+            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+            fprintf(stderr, "%s\n", log);
+            free(log);
+        }
+        // clReleaseContext(context);
+        clReleaseProgram(program);
+        // clReleaseCommandQueue(queue);
+        return false;
+    }
+    return true;
+}
+
 class ClSystem
 {
     // 管理运行环境
@@ -344,24 +386,103 @@ cl_command_queue *get_command_queue(); // 这三个不能函数退出时释放�
 // shared_ptr<cl_program> make_kernel_program(const string &program_src);
 // shared_ptr<cl_kernel> make_kernel(const string &kernel_name, const string &program_sr
 
+class Manager;
+class KernelManager
+{
+    Manager *manager;
+    cl_program program;
+    cl_kernel
+};
+
 class Manager
 {
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
+    unordered_map<const string *, cl_program> program_record;
+    unordered_map<const string *, cl_kernel> kernel_record;
     bool init = false;
-
 public:
-    Manager(const Manager &) = delete;
-    static Manager &instance();
+    Manager(const Manager &) = delete; // 禁止复制
+    static Manager &instance(); // 可以单例也可以不
+    operator bool() { return init; } // 判断状态
+
     cl_context get_context();
     cl_device_id get_device();
     cl_command_queue get_command_queue();
-    operator bool() { return init; } // 判断状态
 
-    // 用这个接口，kernel不能兼容调用完自动释放
-    cl_kernel *make_kernel(const string &kernel_name, const string &program_src);
+    // 用这个接口，kernel不能实现自动释放，只能由Manager来释放
+    bool make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
+    // cl_kernel *make_kernel(const string &kernel_name, const string &program_src);
+
+    // 这样的话就由KernelManger来自动释放
+    // struct KernelManager; 
+    // KernelManager make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
 
 private:
-    cl_program *make_kernel_program(const string &program_src);
+    // cl_program *make_kernel_program(const string &program_src);
+    bool make_kernel_program(cl_program &program, const string &program_src);
+};
+
+bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
+{
+    {
+        // 尝试从记录里获得
+        auto it = kernel_record.find(&program_src);
+        if (it != record.end())
+        {
+            cout << &kernel_name << " get program from record\n";
+            kernel = (*it).second;
+            return true;
+        }
+    }
+    cl_program program;
+    if (!make_kernel_program(program, &program_src))
+        return false;
+    cl_kernel kernel;
+    if (!make_kernel(kernel, program, kernel_name.c_str()))
+    {
+    }
+    return false;
+
+    kernel_record.insert(make_pair(&kernel_name, ))
 }
+
+class RefCounter
+{
+    size_t *pCounter;
+    void count() { ++*pCounter; }
+    void uncount() { --*pCounter; }
+    size_t *newCounter()
+    {
+        size_t *ptr = new size_t(1);
+        if (!ptr)
+        {
+            cerr << "引用计数内存分配失败\n";
+            exit(1); // 真不知道怎么办，
+        }
+        return ptr;
+    }
+
+public:
+    RefCounter() : pCounter(newCounter()) {}
+    RefCounter(const RefCounter &_Right) : pCounter(_Right.pCounter) { ++*pCounter; }
+    RefCounter(RefCounter &&_Right) : pCounter(_Right.pCounter) { _Right.pCounter = newCounter(); }
+    RefCounter &operator=(const RefCounter &_Right)
+    {
+        pCounter = _Right.pCounter;
+        ++*pCounter;
+    }
+    RefCounter &operator=(RefCounter &&_Right)
+    {
+        pCounter = _Right.pCounter;
+        _Right.pCounter = newCounter();
+    }
+    size_t count() const { return *pCounter; }
+    ~RefCounter()
+    {
+        --*pCounter;
+        if (*pCounter == 0)
+            delete pCounter;
+    }
+};
