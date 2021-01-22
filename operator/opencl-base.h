@@ -16,7 +16,8 @@ using namespace std;
 
 enum
 {
-    NK_SUCCESS
+    NK_SUCCESS = 0,
+    NK_FAIL
 };
 
 // 获取设备信息，初始化context和queue
@@ -372,16 +373,11 @@ public:
     cl_command_queue get_queue() { return queue; }
 
     // 用这个接口，kernel不能实现自动释放，只能由Manager来释放
-    bool make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
-    // cl_kernel *make_kernel(const string &kernel_name, const string &program_src);
-
-    // 这样的话就由KernelManger来自动释放
-    // struct KernelManager;
-    // KernelManager make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
+    int make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
 
 private:
     // cl_program *make_kernel_program(const string &program_src);
-    bool make_kernel_program(cl_program &program, const string &program_src);
+    int make_kernel_program(cl_program &program, const string &program_src);
 };
 
 inline Manager &Manager::instance()
@@ -393,7 +389,7 @@ inline Manager::Manager()
 {
     init = NK_SUCCESS == my_ClDeviceInitializer(context, device, queue);
 }
-inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
+inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
 {
     {
         // 尝试从记录里获得
@@ -402,18 +398,18 @@ inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, c
         {
             cout << &kernel_name << " get kernel from record\n";
             kernel = (*it).second;
-            return true;
+            return NK_SUCCESS;
         }
     }
     cl_program program;
     if (!make_kernel_program(program, program_src))
-        return false;
+        return NK_FAIL;
     if (NK_SUCCESS == __make_kernel(kernel, program, kernel_name.c_str()))
         kernel_record.insert(make_pair(&kernel_name, kernel));
-    return true;
+    return NK_SUCCESS;
 };
 
-inline bool Manager::make_kernel_program(cl_program &program, const string &program_src)
+inline int Manager::make_kernel_program(cl_program &program, const string &program_src)
 {
 
     {
@@ -423,12 +419,13 @@ inline bool Manager::make_kernel_program(cl_program &program, const string &prog
         {
             cout << &program_src << " get program from record\n";
             program = (*it).second;
-            return true;
+            return NK_SUCCESS;
         }
     }
-    if (NK_SUCCESS == __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
-        program_record.insert(make_pair(&program_src, program));
-    return true;
+    if (!NK_SUCCESS == __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
+        return NK_FAIL;
+    program_record.insert(make_pair(&program_src, program));
+    return NK_SUCCESS;
 }
 
 inline Manager::~Manager()
