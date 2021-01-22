@@ -396,8 +396,7 @@ bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const st
     cl_program program;
     if (!make_kernel_program(program, &program_src))
         return false;
-    cl_kernel kernel;
-    if (!make_kernel(kernel, program, kernel_name.c_str()))
+    if (!::make_kernel(kernel, program, kernel_name.c_str()))
     {
     }
     return false;
