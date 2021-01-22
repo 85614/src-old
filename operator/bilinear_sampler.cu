@@ -30,7 +30,7 @@
 #if MXNET_USE_CUDNN == 1
 #include "./cudnn_bilinear_sampler-inl.h"
 #endif  // MXNET_USE_CUDNN
-
+#include "./opencl-test.h"
 namespace mshadow {
 namespace cuda {
 template<typename DType>
