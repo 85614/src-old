@@ -402,10 +402,11 @@ inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, co
         }
     }
     cl_program program;
-    if (!make_kernel_program(program, program_src))
+    if (NK_SUCCESS != make_kernel_program(program, program_src))
         return NK_FAIL;
-    if (NK_SUCCESS == __make_kernel(kernel, program, kernel_name.c_str()))
-        kernel_record.insert(make_pair(&kernel_name, kernel));
+    if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
+        return NK_FAIL;
+    kernel_record.insert(make_pair(&kernel_name, kernel));
     return NK_SUCCESS;
 };
 
