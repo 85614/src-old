@@ -136,15 +136,16 @@ public:
     KernelManager(cl_program _Program) : program(_Program), state(program_inited) {}
     KernelManager(cl_program _Program, cl_kernel _Kernel)
         : program(_Program), kernel(_Kernel), state(program_inited | kernel_inited) {}
-    bool inited() const
-    {
-        return (state & kernel_inited) && (state & program_inited);
-    }
+    bool inited() const { return programInited() && kernelInited(); }
+    bool programInited() const { return (state & program_inited); }
+    bool kernelInited() const { return (state & kernel_inited); }
 
-private:
-    KernelManager(cl_program _Program, cl_kernel _Kernel, int _State)
-        : program(_Program), kernel(_Kernel), state(_State)
+    ~KernelManager()
     {
+        if (kernelInited())
+            clReleaseKernel(kernel);
+        if (programInited())
+            clReleaseProgram(program_pair.second);
     }
 };
 
