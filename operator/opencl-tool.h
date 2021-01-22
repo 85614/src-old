@@ -58,7 +58,8 @@ const string &make_kernel_name(const char *basic_kernel_name)
 {
   // 获取添加类型信息的kernel名，得到静态string变量
   cout << "Test make_kernel_name\n";
-  static string name = my_strcat(basic_kernel_name, ("_" + my_GetFullName<_Args>())...);
+  static string name = basic_kenel_name;
+  // static string name = my_strcat(basic_kernel_name, ("_" + my_GetFullName<_Args>())...);
   // 应该不会有指针类型，数组类型什么的吧
   return name;
 }

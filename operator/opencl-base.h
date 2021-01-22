@@ -14,6 +14,8 @@
 #include "opencl-tool.h"
 using namespace std;
 
+enum { NK_SUCCESS };
+
 // 获取设备信息，初始化context和queue
 inline bool
 my_ClDeviceInitializer(cl_context &context, cl_device_id &device, cl_command_queue &queue)
@@ -88,7 +90,7 @@ bool make_kernel(cl_kernel &kernel, cl_program &program, const char *kernal_name
     return true;
 }
 
-bool make_program(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
+bool make_program(cl_program &program, cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
 {
     cl_int err;
     const char *source = src.c_str();
@@ -346,45 +348,6 @@ public:
     }
 };
 
-void manage(cl_context context, cl_device_id device, cl_command_queue queue);
-void manage(cl_program program);
-void manage(cl_kernel kernel);
-
-tuple<cl_context *, cl_device_id *, cl_command_queue *> get_environment();
-
-// 指针非空判断获取资源成功
-// 指针用起来可能不太方便
-cl_context *get_context();
-cl_device_id *get_device();
-cl_command_queue *get_command_queue();
-cl_program *make_kernel_program(const string &program_src);
-cl_kernel *make_kernel(const string &kernel_name, const string &program_src);
-
-// err 为flase 判断获取资源成功
-// 要先声明一个bool变量
-cl_context get_context(bool &err);
-cl_device_id get_device(bool &err);
-cl_command_queue get_command_queue(bool &err);
-cl_program make_kernel_program(const string &program_src, bool &err);
-cl_kernel make_kernel(const string &kernel_name, const string &program_src, bool &err);
-
-// 返回true/false判断获取资源成功
-// 要先声明变量
-// 不能用auto xxx =
-bool get_context(cl_context &context);
-bool get_device(cl_device_id &device);
-bool get_command_queue(cl_command_queue &queue);
-bool make_kernel_program(const string &program_src, cl_program &program);
-bool make_kernel(const string &kernel_name, const string &program_src, cl_kernel &kernel);
-
-// 智能指针可以兼容更多的实现
-// 既可以自动释放资源，也可以之后再释放资源
-// 可以当成普通指针*ptr一样用
-cl_context *get_context();
-cl_device_id *get_device();
-cl_command_queue *get_command_queue(); // 这三个不能函数退出时释放资源，因为下面这两个都要用到
-// shared_ptr<cl_program> make_kernel_program(const string &program_src);
-// shared_ptr<cl_kernel> make_kernel(const string &kernel_name, const string &program_sr
 
 class Manager;
 class KernelManager
@@ -399,8 +362,8 @@ class Manager
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
-    unordered_map<const string *, cl_program> program_record;
-    unordered_map<const string *, cl_kernel> kernel_record;
+    unordered_map<const string *, cl_program> program_record; // 程序的记录
+    unordered_map<const string *, cl_kernel> kernel_record; // kernel的记录
     bool init = false;
 public:
     Manager(const Manager &) = delete; // 禁止复制

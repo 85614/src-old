@@ -233,10 +233,10 @@ namespace mxnet
 
     /*
 把改写的OpenCL kernel 封装为Op的具体实现，其中主要内容即为OpenCL编程过程，即编写一个OpenCl代码时的所进行的步骤，和CUDA是无关的，
-*/
-
+*/        
+    
     template <typename DType, typename LType>
-    const std::string &make_add_bias_kernel_src()
+    const std::string &make_add_bias_kernel_src(int arg)
     {
       // 生成add_bias_kernel的源代码，返回静态字符串变量
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
@@ -345,7 +345,8 @@ namespace mxnet
       // 得到kernel
       const string &program_src = make_add_bias_kernel_src<DType, LType>();
       cl_kernel kernel;
-      if (!manager.make_kernel(kernel, kernel_name, program_src))
+      auto kernelManager = manager.make_kernel(kernel, kernel_name, program_src);
+      if (!kernelManager)
         return;
       // 分配内存
       MemManager memManager; // 管理内存
