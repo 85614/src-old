@@ -224,17 +224,17 @@ inline Manager::Manager()
     init = NK_SUCCESS == my_ClDeviceInitializer(context, device, queue);
 }
 
-KernelManager Manager::make_kernel(const string &kernel_name, const string &program_src)
-{
-    // 生成program
-    cl_program program;
-    if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
-        return KernelManager();
-    cl_kernel kernel;
-    if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
-        return KernelManager(program);
-    return KernelManager(program, kernel);
-}
+// KernelManager Manager::make_kernel(const string &kernel_name, const string &program_src)
+// {
+//     // 生成program
+//     cl_program program;
+//     if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
+//         return KernelManager();
+//     cl_kernel kernel;
+//     if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
+//         return KernelManager(program);
+//     return KernelManager(program, kernel);
+// }
 inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
 {
     {
