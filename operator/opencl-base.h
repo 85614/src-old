@@ -145,7 +145,7 @@ public:
         if (kernelInited())
             clReleaseKernel(kernel);
         if (programInited())
-            clReleaseProgram(program_pair.second);
+            clReleaseProgram(program);
     }
 };
 
@@ -154,8 +154,8 @@ class Manager
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
-    unordered_map<const string *, cl_program> program_record; // 程序的记录，源代码为键值
-    unordered_map<const string *, cl_kernel> kernel_record;   // kernel的记录，kernel名为键值
+    unordered_map<const string, cl_program> program_record; // 程序的记录，源代码为键值
+    unordered_map<const string, cl_kernel> kernel_record;   // kernel的记录，kernel名为键值
     bool init = false;
     Manager();
 
@@ -226,7 +226,7 @@ inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, co
 {
     {
         // 尝试从记录里获得
-        auto it = kernel_record.find(&program_src);
+        auto it = kernel_record.find(program_src);
         if (it != kernel_record.end())
         {
             kernel = (*it).second;
@@ -240,7 +240,7 @@ inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, co
     // 生成kernel
     if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
         return NK_FAIL;
-    kernel_record.insert(make_pair(&kernel_name, kernel));
+    kernel_record.insert(make_pair(kernel_name, kernel));
     return NK_SUCCESS;
 };
 
@@ -249,7 +249,7 @@ inline int Manager::make_kernel_program(cl_program &program, const string &progr
 
     {
         // 尝试从记录里获得
-        auto it = program_record.find(&program_src);
+        auto it = program_record.find(program_src);
         if (it != program_record.end())
         {
             program = (*it).second;
@@ -259,7 +259,7 @@ inline int Manager::make_kernel_program(cl_program &program, const string &progr
     // 生成program
     if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
         return NK_FAIL;
-    program_record.insert(make_pair(&program_src, program));
+    program_record.insert(make_pair(program_src, program));
     return NK_SUCCESS;
 }
 
