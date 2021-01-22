@@ -349,13 +349,7 @@ public:
 };
 
 
-class Manager;
-class KernelManager
-{
-    Manager *manager;
-    cl_program program;
-    cl_kernel
-};
+
 
 class Manager
 {
