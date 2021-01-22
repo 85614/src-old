@@ -437,7 +437,7 @@ inline Manager::~Manager()
         return;
     for (auto kernel_pair : kernel_record)
         clReleaseKernel(kernel_pair.second);
-    for (auto progrom_pair : program_record)
+    for (auto program_pair : program_record)
         clReleaseProgram(program_pair.second);
     clReleaseContext(context);
     clReleaseCommandQueue(queue);
