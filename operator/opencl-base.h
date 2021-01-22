@@ -359,9 +359,11 @@ class Manager
     unordered_map<const string *, cl_program> program_record; // 程序的记录
     unordered_map<const string *, cl_kernel> kernel_record;   // kernel的记录
     bool init = false;
+    Manager();
 
 public:
     Manager(const Manager &) = delete; // 禁止复制
+
     static Manager &instance()
     {
         static Manager manager;
@@ -382,7 +384,6 @@ public:
     // KernelManager make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
 
 private:
-    Manager();
     // cl_program *make_kernel_program(const string &program_src);
     bool make_kernel_program(cl_program &program, const string &program_src);
 };
@@ -427,4 +428,16 @@ inline bool Manager::make_kernel_program(cl_program &program, const string &prog
     if (NK_SUCCESS == __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
         program_record.insert(make_pair(&program_src, program));
     return true;
+}
+
+inline Manager::~Manager()
+{
+    if (!init)
+        return;
+    for (auto kernel_pair : kernel_record)
+        clReleaseKernel(kernel_pair.second);
+    for (auto progrom_pair : program_record)
+        clReleaseProgram(program_pair.second);
+    clReleaseContext(context);
+    clReleaseCommandQueue(queue);
 }
