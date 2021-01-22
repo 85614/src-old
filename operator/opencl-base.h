@@ -143,9 +143,16 @@ public:
     ~KernelManager()
     {
         if (kernelInited())
+        {
             clReleaseKernel(kernel);
+            cout << "release kernel\n";
+        }
+
         if (programInited())
+        {
             clReleaseProgram(program);
+            cout << "release program\n";
+        }
     }
 };
 
@@ -204,6 +211,7 @@ public:
             if (mem)
             {
                 clReleaseMemObject(mem);
+                cout << mem << "release mem\n";
                 mem = 0;
             }
         mems.clear();
