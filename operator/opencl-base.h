@@ -139,7 +139,7 @@ public:
     bool inited() const { return programInited() && kernelInited(); }
     bool programInited() const { return (state & program_inited); }
     bool kernelInited() const { return (state & kernel_inited); }
-    kernel get_kernel()const {return kernel;}
+    cl_kernel get_kernel() const { return kernel; }
     ~KernelManager()
     {
         if (kernelInited())
@@ -154,8 +154,8 @@ class Manager
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
-    unordered_map<const string*, cl_program> program_record; // 程序的记录，源代码为键值
-    unordered_map<const string*, cl_kernel> kernel_record;   // kernel的记录，kernel名为键值
+    unordered_map<const string *, cl_program> program_record; // 程序的记录，源代码为键值
+    unordered_map<const string *, cl_kernel> kernel_record;   // kernel的记录，kernel名为键值
     bool init = false;
     Manager();
 
