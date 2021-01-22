@@ -238,7 +238,10 @@ namespace mxnet
     template <typename DType, typename LType>
     const std::string &make_add_bias_kernel_src()
     {
-      // 生成add_bias_kernel的源代码，返回静态字符串变量
+      // 生成add_bias_kernel的源代码返回
+      // 这里使用static，并且返回引用是因为每次这里生成的字符串不会变
+      // 实际可能会根据传入的参数，生成不同的代码，就不能使用static了
+      // 这些就不能用static，返回string就可以了
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
       static string ans;
       if (!ans.empty())
@@ -283,44 +286,47 @@ namespace mxnet
     void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
-      const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
+      const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel"); // 得到kernel名，一般是static，可能会补充类型信息
       MY_DEBUG(kernel_name);
-      auto clsys = ClSystem::singleton();
-      if (!clsys)
+      Manager &manager = Manager::instance(); // 获得一个管理者
+      if (!manager.inited()) // 判断是否初始化
         return;
+      auto context = manager.get_context(); // 获得context
+      auto queue = manager.get_queue();     // 获得queue
       // 得到kernel
-      const string &program_src = make_add_bias_kernel_src<DType, LType>();
-      KernelManager *kernelM = KernelManager::make_kernel(kernel_name, program_src);
-      if (!kernelM || !kernelM->is_good)
+      const string &program_src = make_add_bias_kernel_src<DType, LType>(); // 生成源码
+      KernelManager kernelManager = manager.make_kernel(kernel_name, program_src); // 使用kernel 名和源码生成kernelManager，析构时自动释放资源
+      if (!kernelManager.inited()) // 判断是否初始化
         return;
+      cl_kernel kernel = kernelManager.get_kernel(); 
       // 分配内存
-      MemManager memM; // 管理内存
+      MemManager memManager; // 管理内存，析构时自动释放资源
       // 计算内存大小
       size_t N = out.shape_[0] * out.shape_[1];
       size_t bias_N = bias.shape_[0];
       // 使用MemManager统一分配管理管理
-      memM.addMem(clsys->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_);
-      memM.addMem(clsys->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_);
-      if (!memM.is_good)
+      cl_mem cl_bias, cl_mat;
+      // 调用addMen会分配内存，并赋值给cl_bias，cl_mat，并添加到memManager上
+      if (NK_SUCCESS != memManager.addMem(cl_mat, context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_) ||
+          NK_SUCCESS != memManager.addMem(cl_bias, context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
         return;
-      // 设置参数
-      setArgs(kernelM->kernel, memM.mems[0], memM.mems[1], data.size(0), bias.shape_[0]);
+      // 设置参数，按顺序传入就行了
+      setArgs(kernel, cl_mat, cl_bias, data.size(0), bias.shape_[0]);
+
+      // 后面都是一样的
       // 调用kernel，设置总工作项数和一个组的工作项数
       const int nthreads_addbias = 256;
       int lead_dim = data.size(0);
-      size_t work_size = lead_dim * nthreads_addbias; // 总工作项数
-
-      cl_int err = clEnqueueNDRangeKernel(clsys->queue, kernelM->kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
-
-      clFinish(clsys->queue);
-
+      size_t work_size = lead_dim * nthreads_addbias; // 总工作项数，cuda<<<>>>两个参数的积
+      cl_int err;
+      err = clEnqueueNDRangeKernel(queue, kernel, 1, nullptr, &work_size, nullptr, 0, nullptr, nullptr);
+      // 同步
+      clFinish(queue);
       //取回结果
       if (err == CL_SUCCESS)
       {
         // 从GPU取回结果
-
-        err = clEnqueueReadBuffer(clsys->queue, memM.mems[0], CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
-
+        err = clEnqueueReadBuffer(queue, cl_mat, CL_TRUE, 0, sizeof(DType) * N, out.dptr_, 0, 0, 0);
         cout << out.dptr_[0] << "  " << out.dptr_[1] << endl;
         if (err != CL_SUCCESS)
         {
@@ -338,7 +344,7 @@ namespace mxnet
         // 测试两次调用
         add_bias_kernel<DType, LType>(bias, data, out, s);
         add_bias_kernel<DType, LType>(bias, data, out, s);
-        cout << "Test double call\n";
+        cout << "Test double  call\n";
       });
     }
 
@@ -802,4 +808,3 @@ namespace std
   };
 } // namespace std
 #endif // MXNET_OPERATOR_NN_FULLY_CONNECTED_INL_H_
-
