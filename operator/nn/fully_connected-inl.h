@@ -297,7 +297,7 @@ namespace mxnet
       KernelManager kernelManager = manager.make_kernel(kernel_name, program_src);
       if (!kernelManager.inited())
         return;
-      cl_kernel kernel = kernelManger.get_kernel();
+      cl_kernel kernel = kernelManager.get_kernel();
       // 分配内存
       MemManager memManager; // 管理内存，析构时自动释放资源
       // 计算内存大小
