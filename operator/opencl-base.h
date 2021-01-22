@@ -362,8 +362,12 @@ class Manager
 
 public:
     Manager(const Manager &) = delete; // 禁止复制
-    static Manager &instance();        // 可以单例也可以不
-    operator bool() { return init; }   // 判断状态
+    static Manager &instance()
+    {
+        static Manager manager;
+        return manager;
+    }                                // 可以单例也可以不
+    operator bool() { return init; } // 判断状态
 
     cl_context get_context() { return context; }
     cl_device_id get_device() { return device; }
@@ -421,6 +425,6 @@ inline bool Manager::make_kernel_program(cl_program &program, const string &prog
         }
     }
     if (NK_SUCCESS == __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
-        kernel_record.insert(make_pair(&kernel_name, kernel));
+        kernel_record.insert(make_pair(&program_src, program));
     retyrb true;
 }
