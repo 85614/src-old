@@ -165,7 +165,6 @@ inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, co
         auto it = kernel_record.find(&program_src);
         if (it != kernel_record.end())
         {
-            cout << &kernel_name << " get kernel from record\n";
             kernel = (*it).second;
             return NK_SUCCESS;
         }
@@ -187,7 +186,6 @@ inline int Manager::make_kernel_program(cl_program &program, const string &progr
         auto it = program_record.find(&program_src);
         if (it != program_record.end())
         {
-            cout << &program_src << " get program from record\n";
             program = (*it).second;
             return NK_SUCCESS;
         }
