@@ -303,8 +303,8 @@ namespace mxnet
       size_t bias_N = bias.shape_[0];
       // 使用MemManager统一分配管理管理
       cl_mem cl_bias, cl_mat;
-      if (memManager.addMem(cl_mat, context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_) ||
-          memManager.addMem(cl_bias, context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
+      if (NK_SUCCESS != memManager.addMem(cl_mat, context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_) ||
+          NK_SUCCESS != memManager.addMem(cl_bias, context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
         return;
       // 设置参数
       setArgs(kernel, cl_mat, cl_bias, data.size(0), bias.shape_[0]);

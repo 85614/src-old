@@ -209,3 +209,55 @@ inline Manager::~Manager()
     clReleaseContext(context);
     clReleaseCommandQueue(queue);
 }
+
+// 设置参数所用的工具函数
+inline void __setArgs(cl_kernel kernel, int index) {}
+template <typename _First, typename... _Args>
+void __setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
+{
+    // 从index开始设置参数
+    clSetKernelArg(kernel, index, sizeof(first), &first);
+    __setArgs(kernel, index + 1, args...);
+}
+// 方便地设置参数
+template <typename... _Args>
+void setArgs(cl_kernel kernel, _Args &&... args)
+{
+    __setArgs(kernel, 0, args...); // 从0开始设置参数
+}
+
+class MemManager
+{
+    // 管理几个内存
+public:
+    vector<cl_mem> mems; // 或许可以用map实现，用字符串索引
+
+    // 当某个内存分配失败时，释放所有的资源
+    int addMem(cl_mem &mem, cl_context context, // The context where the memory will be allocated
+               cl_mem_flags flags,
+               size_t size, // The size in bytes
+               void *host_ptr)
+    {
+        cl_int errcode_ret;
+        mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
+        if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
+            return NK_FAIL;
+        mems.push_back(mem);
+        return NK_SUCCESS;
+    }
+    void clear()
+    {
+        // 清空
+        for (cl_mem &mem : mems)
+            if (mem)
+            {
+                clReleaseMemObject(mem);
+                mem = 0;
+            }
+        mems.clear();
+    }
+    ~MemManager()
+    {
+        clear();
+    }
+};
