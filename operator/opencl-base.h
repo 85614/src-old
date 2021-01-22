@@ -365,9 +365,9 @@ public:
     static Manager &instance();        // 可以单例也可以不
     operator bool() { return init; }   // 判断状态
 
-    cl_context get_context();
-    cl_device_id get_device();
-    cl_command_queue get_queue();
+    cl_context get_context() { return context; }
+    cl_device_id get_device() { return device; }
+    cl_command_queue get_queue() { return queue; }
 
     // 用这个接口，kernel不能实现自动释放，只能由Manager来释放
     bool make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
@@ -402,7 +402,7 @@ inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, c
     cl_program program;
     if (!make_kernel_program(program, program_src))
         return false;
-    if (NK_SUCCESS == __make_kernel(kernel, program, kernal_name.c_str()))
+    if (NK_SUCCESS == __make_kernel(kernel, program, kernel_name.c_str()))
         kernel_record.insert(make_pair(&kernel_name, kernel));
     return true;
 };
