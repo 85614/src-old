@@ -385,7 +385,7 @@ private:
 
 inline Manager::Manager()
 {
-    init =  NK_SUCCESS == my_ClDeviceInitializer(context, device, queue));
+    init = NK_SUCCESS == my_ClDeviceInitializer(context, device, queue);
 }
 inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
 {
@@ -406,3 +406,21 @@ inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, c
         kernel_record.insert(make_pair(&kernel_name, kernel));
     return true;
 };
+
+inline bool Manager::make_kernel_program(cl_program &program, const string &program_src)
+{
+
+    {
+        // 尝试从记录里获得
+        auto it = program_record.find(&program_src);
+        if (it != program_record.end())
+        {
+            cout << &program_src << " get program from record\n";
+            program = (*it).second;
+            return true;
+        }
+    }
+    if (NK_SUCCESS == __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
+        kernel_record.insert(make_pair(&kernel_name, kernel));
+    retyrb true;
+}
