@@ -154,8 +154,8 @@ class Manager
     cl_device_id device;
     cl_context context;
     cl_command_queue queue;
-    unordered_map<const string, cl_program> program_record; // 程序的记录，源代码为键值
-    unordered_map<const string, cl_kernel> kernel_record;   // kernel的记录，kernel名为键值
+    unordered_map<string, cl_program> program_record; // 程序的记录，源代码为键值
+    unordered_map<string, cl_kernel> kernel_record;   // kernel的记录，kernel名为键值
     bool init = false;
     Manager();
 
