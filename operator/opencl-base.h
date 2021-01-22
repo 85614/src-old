@@ -381,7 +381,7 @@ private:
     bool make_kernel_program(cl_program &program, const string &program_src);
 };
 
-bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
+inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
 {
     {
         // 尝试从记录里获得
