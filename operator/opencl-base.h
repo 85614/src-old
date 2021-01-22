@@ -392,7 +392,7 @@ bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const st
     {
         // 尝试从记录里获得
         auto it = kernel_record.find(&program_src);
-        if (it != record.end())
+        if (it != kernel_record.end())
         {
             cout << &kernel_name << " get program from record\n";
             kernel = (*it).second;
