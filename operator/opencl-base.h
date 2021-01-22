@@ -363,12 +363,8 @@ class Manager
 
 public:
     Manager(const Manager &) = delete; // 禁止复制
-
-    static Manager &instance()
-    {
-        static Manager manager;
-        return manager;
-    }                                // 可以单例也可以不
+    ~Manager();
+    static Manager &instance();      // 可以单例也可以不
     operator bool() { return init; } // 判断状态
 
     cl_context get_context() { return context; }
@@ -388,6 +384,11 @@ private:
     bool make_kernel_program(cl_program &program, const string &program_src);
 };
 
+inline Manager &Manager::instance()
+{
+    static Manager manager;
+    return manager;
+}
 inline Manager::Manager()
 {
     init = NK_SUCCESS == my_ClDeviceInitializer(context, device, queue);
