@@ -139,7 +139,7 @@ public:
     bool inited() const { return programInited() && kernelInited(); }
     bool programInited() const { return (state & program_inited); }
     bool kernelInited() const { return (state & kernel_inited); }
-
+    kernel get_kernel()const {return kernel;}
     ~KernelManager()
     {
         if (kernelInited())

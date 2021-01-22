@@ -293,10 +293,11 @@ namespace mxnet
       auto queue = manager.get_queue();     // 获得queue
       // 得到kernel
       const string &program_src = make_add_bias_kernel_src<DType, LType>();
-      cl_kernel kernel;
-      KernelManager kernelManager = manager.make_kernel(kernel, kernel_name, program_src);
+      
+      KernelManager kernelManager = manager.make_kernel(kernel_name, program_src);
       if (!kernelManager.inited())
         return;
+      cl_kernel kernel = kernelManger.get_kernel();
       // 分配内存
       MemManager memManager; // 管理内存，析构时自动释放资源
       // 计算内存大小
