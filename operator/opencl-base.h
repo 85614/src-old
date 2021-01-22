@@ -116,10 +116,8 @@ inline bool __make_program(cl_program &program, cl_context &context, cl_device_i
         // clReleaseContext(context);
         clReleaseProgram(program);
         // clReleaseCommandQueue(queue);
-        MY_DEBUG(__LINE__);
         return NK_FAIL;
     }
-    MY_DEBUG(__LINE__);
     return NK_SUCCESS;
 }
 
@@ -393,7 +391,6 @@ inline Manager::Manager()
 }
 inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
 {
-    MY_DEBUG(__LINE__);
     {
         // 尝试从记录里获得
         auto it = kernel_record.find(&program_src);
@@ -407,10 +404,8 @@ inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, co
     cl_program program;
     if (NK_SUCCESS != make_kernel_program(program, program_src))
         return NK_FAIL;
-    MY_DEBUG(__LINE__);
     if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
         return NK_FAIL;
-    MY_DEBUG(__LINE__);
     kernel_record.insert(make_pair(&kernel_name, kernel));
     return NK_SUCCESS;
 };
@@ -428,10 +423,8 @@ inline int Manager::make_kernel_program(cl_program &program, const string &progr
             return NK_SUCCESS;
         }
     }
-    MY_DEBUG(__LINE__);
     if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
         return NK_FAIL;
-    MY_DEBUG(__LINE__);
     program_record.insert(make_pair(&program_src, program));
     return NK_SUCCESS;
 }

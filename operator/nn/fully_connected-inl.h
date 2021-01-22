@@ -337,19 +337,15 @@ namespace mxnet
       MY_DEBUG(kernel_name);
       //
       Manager &manager = Manager::instance();
-      MY_DEBUG(__LINE__);
       if (!manager)
         return;
-      MY_DEBUG(__LINE__);
       auto context = manager.get_context(); // 获得context
       auto queue = manager.get_queue();     // 获得queue
-      return;
       // 得到kernel
       const string &program_src = make_add_bias_kernel_src<DType, LType>();
       cl_kernel kernel;
       if (NK_SUCCESS != manager.make_kernel(kernel, kernel_name, program_src))
         return;
-      MY_DEBUG(__LINE__);
       // 分配内存
       MemManager memManager; // 管理内存
       // 计算内存大小
@@ -360,7 +356,6 @@ namespace mxnet
       if (memManager.addMem(cl_mat, context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(DType) * N, out.dptr_) ||
           memManager.addMem(cl_bias, context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(DType) * bias_N, bias.dptr_))
         return;
-      MY_DEBUG(__LINE__);
       // 设置参数
       setArgs(kernel, cl_mat, cl_bias, data.size(0), bias.shape_[0]);
       // 调用kernel，设置总工作项数和一个组的工作项数
