@@ -294,7 +294,8 @@ namespace mxnet
       // 得到kernel
       const string &program_src = make_add_bias_kernel_src<DType, LType>();
       cl_kernel kernel;
-      if (NK_SUCCESS != manager.make_kernel(kernel, kernel_name, program_src))
+      auto kernelManger = manager.make_kernel(kernel, kernel_name, program_src);
+      if (!kernelManager.inited())
         return;
       // 分配内存
       MemManager memManager; // 管理内存，析构时自动释放资源
