@@ -393,6 +393,7 @@ inline Manager::Manager()
 }
 inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src)
 {
+    MY_DEBUG(__LINE__);
     {
         // 尝试从记录里获得
         auto it = kernel_record.find(&program_src);
