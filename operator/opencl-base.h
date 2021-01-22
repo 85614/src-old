@@ -178,8 +178,9 @@ public:
     cl_command_queue get_queue() { return queue; }
 
     KernelManager make_kernel(const string &kernel_name, const string &program_src);
-    // 用这个接口，kernel不能实现自动释放，只能由Manager来释放
-    int make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
+    
+    // 这个接口暂时有点问题
+    // int make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
 
 private:
     int make_kernel_program(cl_program &program, const string &program_src);

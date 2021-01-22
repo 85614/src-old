@@ -292,8 +292,7 @@ namespace mxnet
       auto context = manager.get_context(); // 获得context
       auto queue = manager.get_queue();     // 获得queue
       // 得到kernel
-      const string &program_src = make_add_bias_kernel_src<DType, LType>();
-      
+      const string &program_src = make_add_bias_kernel_src<DType, LType>(); // 生成源码
       KernelManager kernelManager = manager.make_kernel(kernel_name, program_src);
       if (!kernelManager.inited())
         return;
