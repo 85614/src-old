@@ -398,7 +398,7 @@ inline bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, c
         auto it = kernel_record.find(&program_src);
         if (it != kernel_record.end())
         {
-            cout << &kernel_name << " get program from record\n";
+            cout << &kernel_name << " get kernel from record\n";
             kernel = (*it).second;
             return true;
         }
@@ -425,6 +425,6 @@ inline bool Manager::make_kernel_program(cl_program &program, const string &prog
         }
     }
     if (NK_SUCCESS == __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
-        kernel_record.insert(make_pair(&program_src, program));
+        program_record.insert(make_pair(&program_src, program));
     return true;
 }
