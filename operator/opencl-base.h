@@ -116,8 +116,10 @@ inline bool __make_program(cl_program &program, cl_context &context, cl_device_i
         // clReleaseContext(context);
         clReleaseProgram(program);
         // clReleaseCommandQueue(queue);
+        MY_DEBUG(__LINE__);
         return NK_FAIL;
     }
+    MY_DEBUG(__LINE__);
     return NK_SUCCESS;
 }
 
@@ -425,6 +427,7 @@ inline int Manager::make_kernel_program(cl_program &program, const string &progr
             return NK_SUCCESS;
         }
     }
+    MY_DEBUG(__LINE__);
     if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
         return NK_FAIL;
     MY_DEBUG(__LINE__);
