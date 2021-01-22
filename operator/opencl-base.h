@@ -121,237 +121,6 @@ inline bool __make_program(cl_program &program, cl_context &context, cl_device_i
     return NK_SUCCESS;
 }
 
-class ClSystem
-{
-    // 管理运行环境
-public:
-    cl_device_id device;
-    cl_context context;
-    cl_command_queue queue;
-    bool is_good = false; // 状态，状态良好，则可用，且析构时释放资源
-    static ClSystem *singleton()
-    {
-        // 单例
-        static ClSystem instance;
-        return &instance;
-    }
-
-private:
-    ClSystem()
-    {
-
-        // 这里就直接用my_ClDeviceInitializer了
-        if (my_ClDeviceInitializer(context, device, queue))
-            is_good = false;
-        else
-            is_good = true;
-    }
-
-public:
-    ClSystem(const ClSystem &) = delete;
-    ~ClSystem()
-    {
-        if (is_good)
-        {
-            clReleaseContext(context);
-            clReleaseCommandQueue(queue);
-        }
-    }
-};
-
-class ProgramManager
-{
-    // 管理 program
-public:
-    cl_program program;
-    bool is_good = false; // 状态，状态良好，则可用，且析构时释放资源
-
-    static ProgramManager *make_kernel_program(const string &program_src)
-    {
-        // 通过源代码字符串得到程序
-        // program_src必须要是静态的
-
-        // 好像声明成类得静态成员变量时，类外初始化得时候回报错
-        // 使用字符串的指针作为索引
-        static unordered_map<const string *, shared_ptr<ProgramManager>> record;
-        {
-            // 尝试获得过去的记录
-            auto it = record.find(&program_src);
-            if (it != record.end())
-            {
-                cout << &program_src << " get program from record\n";
-                ProgramManager *programM = (*it).second.get();
-                return programM && programM->is_good ? programM : nullptr;
-            }
-        }
-        cout << &program_src << " new program\n";
-        auto clsys = ClSystem::singleton();
-        if (!clsys)
-            return nullptr;
-        ProgramManager *programM = new ProgramManager(clsys->context, clsys->device, program_src);
-        if (programM->is_good)
-        {
-            record.insert(std::make_pair(&program_src, (programM)));
-            return programM;
-        }
-        else
-        {
-            delete programM;
-            return nullptr;
-        }
-    }
-    ProgramManager(const ProgramManager &_Right) = delete; // 禁止复制
-    ProgramManager(cl_context &context, cl_device_id &device, /*cl_command_queue &queue, */ const std::string &src)
-    {
-        cl_int err;
-        const char *source = src.c_str();
-        // MY_DEBUG(source);
-        program = clCreateProgramWithSource(context, 1, &source, 0, 0);
-        err = clBuildProgram(program, 0, 0, 0, 0, 0);
-        if (err != CL_SUCCESS)
-        {
-            cout << "Can't load or build program\n";
-            if (err == CL_BUILD_PROGRAM_FAILURE)
-            {
-                size_t log_size;
-                clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-                char *log = (char *)malloc(log_size);
-                clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-                fprintf(stderr, "%s\n", log);
-                free(log);
-            }
-            // clReleaseContext(context);
-            clReleaseProgram(program);
-            // clReleaseCommandQueue(queue);
-            is_good = false;
-            return;
-        }
-        is_good = true;
-    }
-    ~ProgramManager()
-    {
-        if (is_good)
-            clReleaseProgram(program);
-    }
-};
-class KernelManager
-{
-    // 管理 kernel
-public:
-    cl_kernel kernel;
-    bool is_good = false; // 状态，状态良好，则可用，且析构时释放资源
-
-    static KernelManager *make_kernel(const string &kernel_name, const string &program_src)
-    {
-        // 通过kernel名和源代码得到kernel
-        // 通过make_kernel_name得到的kernel_name，自动就是静态的
-
-        // 好像声明成类得静态成员变量时，类外初始化得时候回报错
-        // 使用字符串的指针作为索引
-        static unordered_map<const string *, shared_ptr<KernelManager>> record;
-
-        {
-            auto it = record.find(&kernel_name);
-            if (it != record.end())
-            {
-                cout << &kernel_name << " get kernel from record\n";
-
-                KernelManager *kernelM = (*it).second.get();
-                return kernelM && kernelM->is_good ? kernelM : nullptr;
-            }
-        }
-        cout << &kernel_name << " new kernel\n";
-        ProgramManager *programM = ProgramManager::make_kernel_program(program_src);
-        if (!programM || !programM->is_good)
-            return nullptr;
-        KernelManager *kernelM = new KernelManager(programM->program, kernel_name.c_str());
-        if (kernelM->is_good)
-        {
-            record.insert(std::make_pair(&kernel_name, (kernelM)));
-            return kernelM;
-        }
-        else
-        {
-            delete kernelM;
-            return nullptr;
-        }
-    }
-    KernelManager(cl_program &program, const char *kernal_name)
-    {
-        cl_int err;
-        kernel = clCreateKernel(program, kernal_name, &err); //引号中名称换为改写后的kernel名称
-
-        if (kernel == 0)
-        {
-            cout << "Can't load kernel\n";
-            // clReleaseContext(context);
-            // clReleaseProgram(program);
-            // clReleaseCommandQueue(queue);
-            return;
-        }
-        is_good = true;
-    }
-    KernelManager(const KernelManager &) = delete;
-    ~KernelManager()
-    {
-
-        if (is_good)
-            clReleaseKernel(kernel);
-    }
-};
-
-// 设置参数所用的工具函数
-inline void __setArgs(cl_kernel kernel, int index) {}
-template <typename _First, typename... _Args>
-void __setArgs(cl_kernel kernel, int index, _First &first, _Args &... args)
-{
-    // 从index开始设置参数
-    clSetKernelArg(kernel, index, sizeof(first), &first);
-    __setArgs(kernel, index + 1, args...);
-}
-// 方便地设置参数
-template <typename... _Args>
-void setArgs(cl_kernel kernel, _Args &&... args)
-{
-    __setArgs(kernel, 0, args...); // 从0开始设置参数
-}
-
-class MemManager
-{
-    // 管理几个内存
-public:
-    vector<cl_mem> mems; // 或许可以用map实现，用字符串索引
-
-    // 当某个内存分配失败时，释放所有的资源
-    int addMem(cl_mem &mem, cl_context context, // The context where the memory will be allocated
-               cl_mem_flags flags,
-               size_t size, // The size in bytes
-               void *host_ptr)
-    {
-        cl_int errcode_ret;
-        mem = clCreateBuffer(context, flags, size, host_ptr, &errcode_ret);
-        if (mem == 0 || errcode_ret != CL_SUCCESS) // 这里是不是和CL_SUCCESS比较没有去确定
-            return 1;
-        mems.push_back(mem);
-        return 0;
-    }
-    void clear()
-    {
-        // 清空
-        for (cl_mem &mem : mems)
-            if (mem)
-            {
-                clReleaseMemObject(mem);
-                mem = 0;
-            }
-        mems.clear();
-    }
-    ~MemManager()
-    {
-        clear();
-    }
-};
-
 class Manager
 {
     cl_device_id device;
@@ -365,8 +134,9 @@ class Manager
 public:
     Manager(const Manager &) = delete; // 禁止复制
     ~Manager();
-    static Manager &instance();      // 可以单例也可以不
-    operator bool() { return init; } // 判断状态
+    static Manager &instance(); // 可以单例也可以不
+    // operator bool() { return init; } // 判断状态，NK_SUCCESS是0，就很难受，不用这个了
+    bool inited() { return init; }
 
     cl_context get_context() { return context; }
     cl_device_id get_device() { return device; }
@@ -376,13 +146,12 @@ public:
     int make_kernel(cl_kernel &kernel, const string &kernel_name, const string &program_src);
 
 private:
-    // cl_program *make_kernel_program(const string &program_src);
     int make_kernel_program(cl_program &program, const string &program_src);
 };
 
 inline Manager &Manager::instance()
 {
-    static Manager manager;
+    static Manager manager; // 单例
     return manager;
 }
 inline Manager::Manager()
