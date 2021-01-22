@@ -401,5 +401,5 @@ bool Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, const st
     }
     return false;
 
-    kernel_record.insert(make_pair(&kernel_name, ))
+    // kernel_record.insert(make_pair(&kernel_name, ))
 };

@@ -236,7 +236,7 @@ namespace mxnet
 */        
     
     template <typename DType, typename LType>
-    const std::string &make_add_bias_kernel_src(int arg)
+    const std::string &make_add_bias_kernel_src()
     {
       // 生成add_bias_kernel的源代码，返回静态字符串变量
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
