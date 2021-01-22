@@ -404,8 +404,10 @@ inline int Manager::make_kernel(cl_kernel &kernel, const string &kernel_name, co
     cl_program program;
     if (NK_SUCCESS != make_kernel_program(program, program_src))
         return NK_FAIL;
+    MY_DEBUG(__LINE__);
     if (NK_SUCCESS != __make_kernel(kernel, program, kernel_name.c_str()))
         return NK_FAIL;
+    MY_DEBUG(__LINE__);
     kernel_record.insert(make_pair(&kernel_name, kernel));
     return NK_SUCCESS;
 };
@@ -423,8 +425,9 @@ inline int Manager::make_kernel_program(cl_program &program, const string &progr
             return NK_SUCCESS;
         }
     }
-    if (!NK_SUCCESS == __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
+    if (NK_SUCCESS != __make_program(program, context, device, /*cl_command_queue &queue, */ program_src))
         return NK_FAIL;
+    MY_DEBUG(__LINE__);
     program_record.insert(make_pair(&program_src, program));
     return NK_SUCCESS;
 }
