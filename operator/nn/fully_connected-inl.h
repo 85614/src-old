@@ -233,8 +233,8 @@ namespace mxnet
 
     /*
 把改写的OpenCL kernel 封装为Op的具体实现，其中主要内容即为OpenCL编程过程，即编写一个OpenCl代码时的所进行的步骤，和CUDA是无关的，
-*/        
-    
+*/
+
     template <typename DType, typename LType>
     const std::string &make_add_bias_kernel_src()
     {
@@ -281,7 +281,7 @@ namespace mxnet
 
     template <typename DType, typename LType>
     void add_bias_kernel1(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
-                         Tensor<cpu, 2, DType> out, Stream<cpu> *s)
+                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
       MY_DEBUG(kernel_name);
@@ -331,12 +331,12 @@ namespace mxnet
 
     template <typename DType, typename LType>
     void add_bias_kernel(Tensor<cpu, 1, DType> bias, Tensor<cpu, 2, DType> data,
-                          Tensor<cpu, 2, DType> out, Stream<cpu> *s)
+                         Tensor<cpu, 2, DType> out, Stream<cpu> *s)
     {
       const string &kernel_name = make_kernel_name<DType, LType>("add_bias_kernel");
       MY_DEBUG(kernel_name);
       //
-      Manager &manager = Manager::instance(); 
+      Manager &manager = Manager::instance();
       if (!manager)
         return;
       auto context = manager.get_context(); // 获得context
@@ -345,8 +345,7 @@ namespace mxnet
       // 得到kernel
       const string &program_src = make_add_bias_kernel_src<DType, LType>();
       cl_kernel kernel;
-      auto kernelManager = manager.make_kernel(kernel, kernel_name, program_src);
-      if (!kernelManager)
+      if (NK_SUCCESS != manager.make_kernel(kernel, kernel_name, program_src))
         return;
       // 分配内存
       MemManager memManager; // 管理内存
